@@ -18,6 +18,7 @@ Erwan Miran <emiran.ext@orange.com> - 1 commits
 FormatToday <616099456@qq.com> - 1 commits
 Ian Neal <wopr@wopr.tech> - 1 commits
 Iaroslav Dronskii <iaroslav@dronskii.ru> - 1 commits
+ImgBotApp <ImgBotHelp@gmail.com> - 1 commits
 Ishan Jain <ishan@jain.se> - 1 commits
 Jemy SCHNEPP <dev@leethium.fr> - 1 commits
 Jeremy Chauvin <jeremychauvin10@gmail.com> - 1 commits
@@ -110,12 +111,12 @@ aterox <church.kennetha@gmail.com> - 19 commits
 EVOTk <45015615+EVOTk@users.noreply.github.com> - 24 commits
 Marcell Fülöp <marekful@protonmail.com> - 27 commits
 Alicia Sykes <alicia@futr.ai> - 28 commits
+snyk-bot <snyk-bot@snyk.io> - 52 commits
 Lissy93 <gh@d0h.co> - 78 commits
-snyk-bot <snyk-bot@snyk.io> - 79 commits
-repo-visualizer <repo-visualizer@users.noreply.github.com> - 84 commits
-Alicia Bot <87835202+liss-bot@users.noreply.github.com> - 158 commits
-liss-bot <liss-bot@d0h.co> - 163 commits
-Lissy93 <Lissy93@users.noreply.github.com> - 209 commits
-Alicia Sykes <alicia@omg.lol> - 301 commits
+repo-visualizer <repo-visualizer@users.noreply.github.com> - 85 commits
+Alicia Bot <87835202+liss-bot@users.noreply.github.com> - 160 commits
+liss-bot <liss-bot@d0h.co> - 165 commits
+Lissy93 <Lissy93@users.noreply.github.com> - 208 commits
+Alicia Sykes <alicia@omg.lol> - 284 commits
 Alicia Sykes <gh@d0h.co> - 440 commits
 Alicia Sykes <sykes.alicia@gmail.com> - 1488 commits
