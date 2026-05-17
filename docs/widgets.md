@@ -2473,7 +2473,7 @@ Subscribes to topics on a **private** [ntfy](https://docs.ntfy.sh/) server, and 
 - **CORS**: Disabled
 - **Auth**: Optional
 - **Price**: Free
-- **Host**: [Self-hosted](https://https://docs.ntfy.sh/install/)
+- **Host**: [Self-hosted](https://docs.ntfy.sh/install/)
 - **Privacy**: [ntfy Privacy Policy](https://docs.ntfy.sh/privacy/)
 
 ---

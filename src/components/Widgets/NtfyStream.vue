@@ -25,6 +25,12 @@ export default {
       messages: [],
     };
   },
+  beforeUnmount() {
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = null;
+    }
+  },
   computed: {
     serverUrl() {
       if (!this.options.server_url) this.error('The server URL is required.');
@@ -40,19 +46,33 @@ export default {
     title() {
       return this.parseAsEnvVar(this.options.title) || '';
     },
-
+    limit() {
+      return parseInt(this.options.limit, 10) || 50;
+    },
   },
   methods: {
     fetchData() {
       // @see https://docs.ntfy.sh/subscribe/api/#subscribe-as-sse-stream
       this.finishLoading();
+      if (this.eventSource) {
+        this.eventSource.close();
+      }
       let url = `${this.serverUrl}/${this.topic}/sse`;
       if (this.auth !== '') {
-        url = `${url}?auth=${this.auth}`;
+        url = `${url}?auth=${encodeURIComponent(this.auth)}`;
       }
-      const eventSource = new EventSource(url);
-      eventSource.onmessage = (e) => {
+      this.eventSource = new EventSource(url);
+      this.eventSource.onmessage = (e) => {
         this.messages.unshift(JSON.parse(e.data));
+        if (this.messages.length > this.limit) {
+          this.messages = this.messages.slice(0, this.limit);
+        }
+      };
+      this.eventSource.onerror = (e) => {
+        const msg = this.eventSource.readyState === EventSource.CLOSED ?
+          'ntfy connection closed by the server (check URL, topic and auth).'
+          : 'Unable to reach the ntfy server, reconnecting...';
+        this.error(msg, e);
       };
     },
   },
