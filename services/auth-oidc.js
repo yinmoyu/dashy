@@ -103,12 +103,13 @@ function deriveIsAdmin(claims, settings) {
   return false;
 }
 
-/* Connect middleware factory. Verifies Bearer id_token; sets req.auth on success. */
-function createOidcMiddleware(settings) {
+/* Connect middleware factory. Verifies Bearer id_token; sets req.auth on success
+ * If `permissive: true`, falls through on verification failure instead of 401 */
+function createOidcMiddleware(settings, { permissive = false } = {}) {
   return async (req, res, next) => {
     const header = req.headers.authorization || '';
     const match = header.match(/^Bearer\s+(.+)$/i);
-    if (!match) return next(); // Permissive: no token attached, let downstream gates decide
+    if (!match) return next(); // No token attached, let downstream gates decide
     const token = match[1].trim();
     if (!token) return next();
 
@@ -127,6 +128,7 @@ function createOidcMiddleware(settings) {
       return next();
     } catch (e) {
       console.warn('[auth-oidc] token verification failed:', e.message || e); // eslint-disable-line no-console
+      if (permissive) return next();
       return res.status(401).json({
         success: false,
         message: 'Unauthorized - Invalid or expired token',
