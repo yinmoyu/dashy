@@ -139,6 +139,7 @@ function createOidcMiddleware(settings) {
  * When auth is configured AND guest access disabled AND user not yet authenticated
  * Otherwise, returns null, and the parent proceeds to use full config
  * Has just enough info (the auth config) to initiate the auth process
+ * Plus a special `_bootstrap` marker so frontend can distinguish a stripped config
 */
 function maybeBootstrapConfig(filePath, opts) {
   const { isRootConfig, isAuthenticated, guestAccessOn } = opts;
@@ -146,6 +147,10 @@ function maybeBootstrapConfig(filePath, opts) {
   if (!isRootConfig || isAuthenticated || guestAccessOn) return null;
   const full = yaml.load(fs.readFileSync(filePath, 'utf8')) || {};
   return yaml.dump({
+    _bootstrap: {
+      authenticated: false,
+      timestamp: new Date().toISOString(),
+    },
     appConfig: {
       auth: full.appConfig?.auth || {},
       enableServiceWorker: full.appConfig?.enableServiceWorker,
