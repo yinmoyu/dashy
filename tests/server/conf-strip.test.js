@@ -43,6 +43,8 @@ describe('OIDC strip behaviour for /conf.yml', () => {
     const res = await request(app).get('/conf.yml');
     expect(res.status).toBe(200);
     const body = yamlLoad(res.text);
+    expect(body._bootstrap.authenticated).toBe(false);
+    expect(body._bootstrap.timestamp).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
     expect(body.appConfig.auth.enableOidc).toBe(true);
     expect(body.appConfig.auth.oidc.clientId).toBe('dashy-test');
     expect(body.appConfig.enableServiceWorker).toBe(true);
