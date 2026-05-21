@@ -132,16 +132,8 @@ export default {
       if (this.colCount) classes += ` col-count-${this.colCount}`;
       return classes;
     },
-    /* True if the server served a stripped bootstrap config (e.g. expired token) */
-    isBootstrap() {
-      return this.$store.state.rootConfig?._bootstrap?.authenticated === false;
-    },
   },
   methods: {
-    /* Reload to restart the auth flow (OIDC will see the bootstrap marker and redirect) */
-    reAuth() {
-      window.location.reload();
-    },
     /* Clears input field, once a searched item is opened */
     finishedSearching() {
       if (this.$refs.filterComp) this.$refs.filterComp.clearFilterInput();
