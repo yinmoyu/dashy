@@ -112,7 +112,7 @@ export default {
       const sections = this.singleSectionView || this.sections;
       return sections.map((section) => ({
         ...section,
-        filteredItems: this.filterTiles(section.items),
+        filteredItems: this.filterTiles(section.items, section.name),
       }));
     },
     /* Updates layout (when button clicked), and saves in local storage */

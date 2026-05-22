@@ -64,8 +64,8 @@ export default {
     },
     searchNote() {
       if (this.urlDetected) return this.$t('search.enter-to-open-url');
-      if (!this.searchPrefs.disableWebSearch) return this.$t('search.enter-to-search-web');
-      return '';
+      if (this.searchPrefs.disableWebSearch) return this.$t('search.enter-to-launch-first');
+      return this.$t('search.enter-to-search-web');
     },
   },
   mounted() {
@@ -205,7 +205,7 @@ export default {
 
   form.normal {
     display: flex;
-    align-items: center;
+    align-items: baseline;
     border-radius: 0 0 var(--curve-factor-navbar) 0;
     padding: 0 0.2rem 0.2rem 0;
     background: var(--search-container-background);

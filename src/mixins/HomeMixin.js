@@ -88,14 +88,14 @@ const HomeMixin = {
       return (sections && sections.length >= 1) || (localSections && localSections.length >= 1);
     },
     /* Returns only the tiles that match the users search query */
-    filterTiles(allTiles) {
+    filterTiles(allTiles, sectionName) {
       if (!allTiles) return [];
       const currentUser = getCurrentUser();
       const isGuest = isLoggedInAsGuest();
       const visibleTiles = allTiles.filter(
         (tile) => isVisibleToUser(tile.displayData || {}, currentUser, isGuest),
       );
-      return searchTiles(visibleTiles, this.searchValue);
+      return searchTiles(visibleTiles, this.searchValue, sectionName || '');
     },
     /* Checks if any sections or items use icons from a given CDN */
     checkIfIconLibraryNeeded(prefix) {

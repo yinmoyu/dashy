@@ -12,10 +12,13 @@ const haystackCache = new WeakMap();
 
 const buildHaystack = (tile) => {
   const {
-    title, description, provider, url, tags,
+    title, description, provider, url, tags, subItems,
   } = tile;
   const tagsStr = Array.isArray(tags) ? tags.join(' ') : (tags || '');
-  return normalize(`${title || ''} ${provider || ''} ${description || ''} ${tagsStr} ${url || ''}`);
+  const subText = Array.isArray(subItems)
+    ? subItems.map((s) => `${s.title || ''} ${s.url || ''}`).join(' ')
+    : '';
+  return normalize(`${title || ''} ${provider || ''} ${description || ''} ${tagsStr} ${url || ''} ${subText}`);
 };
 
 const getHaystack = (tile) => {
@@ -35,14 +38,15 @@ const getHaystack = (tile) => {
  * @param {string} searchTerm The users search term
  * @returns A filtered array of tiles
  */
-export const searchTiles = (allTiles, searchTerm) => {
+export const searchTiles = (allTiles, searchTerm, extraHaystack = '') => {
   if (!searchTerm) return allTiles;
   if (!allTiles) return [];
   const words = normalize(searchTerm).split(/\s+/).filter(Boolean);
   if (!words.length) return allTiles;
+  const extra = normalize(extraHaystack);
   return allTiles.filter((tile) => {
     const haystack = getHaystack(tile);
-    return words.every((word) => haystack.includes(word));
+    return words.every((word) => haystack.includes(word) || extra.includes(word));
   });
 };
 

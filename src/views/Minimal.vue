@@ -105,7 +105,7 @@ export default {
     filteredSections() {
       return (this.sections || []).map((section) => ({
         ...section,
-        filteredItems: this.filterTiles(section.items),
+        filteredItems: this.filterTiles(section.items, section.name),
       }));
     },
   },
