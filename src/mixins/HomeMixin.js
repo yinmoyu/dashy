@@ -88,12 +88,14 @@ const HomeMixin = {
       return (sections && sections.length >= 1) || (localSections && localSections.length >= 1);
     },
     /* Returns only the tiles that match the users search query */
-    filterTiles(allTiles, sectionName) {
+    filterTiles(allTiles, sectionName, opts = {}) {
       if (!allTiles) return [];
       const currentUser = getCurrentUser();
       const isGuest = isLoggedInAsGuest();
+      const showHidden = !!opts.showHidden;
       const visibleTiles = allTiles.filter(
-        (tile) => isVisibleToUser(tile.displayData || {}, currentUser, isGuest),
+        (tile) => isVisibleToUser(tile.displayData || {}, currentUser, isGuest)
+          && (showHidden || !tile.displayData?.hideFromHomepage),
       );
       return searchTiles(visibleTiles, this.searchValue, sectionName || '');
     },

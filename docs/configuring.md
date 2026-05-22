@@ -288,6 +288,7 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 **`hideForKeycloakUsers`** | `object`  | _Optional_ | Current item will be visible to all keycloak users, except for those configured via these groups and roles. See `hideForKeycloakUsers`
 **`showForKeycloakUsers`** | `object`  | _Optional_ | Current item will be hidden from all keycloak users, except for those configured via these groups and roles. See `showForKeycloakUsers`
 **`hideFromWorkspace`** | `boolean` | _Optional_ | Current item will be visible in the default view but not in the Workspace view sidebar. Defaults to `false`
+**`hideFromHomepage`** | `boolean` | _Optional_ | If `true`, item is hidden from the home and minimal views until matched by a search. Still visible in workspace, edit mode and single-section view. Defaults to `false`
 
 **[⬆️ Back to Top](#configuring)**
 

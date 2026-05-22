@@ -33,6 +33,20 @@ By default, when searching items are filtered by the `title`, (as well as the `u
 
 In the above example, Plex will be visible when searching for 'movies', and FreshRSS with 'news'
 
+## Hiding Items From The Homepage
+
+You can hide a rarely-used item from the main view but still have it surface when you search for it. Set `displayData.hideFromHomepage: true` on the item.
+
+```yaml
+- title: MXToolbox
+  url: https://mxtoolbox.com
+  tags: [dns, mail, debug]
+  displayData:
+    hideFromHomepage: true
+```
+
+The item still shows up in search results, and stays visible in the workspace view, in edit mode, and when you navigate into its parent section directly.
+
 ## Custom Hotkeys
 
 For apps that you use regularly, you can set a custom keybinding. Use the `hotkey` parameter on a certain item to specify a numeric key, between `0 - 9`. You can then launch that app, by just pressing that key, which is much quicker than searching for it, if it's an app you use frequently.

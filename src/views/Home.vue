@@ -110,9 +110,10 @@ export default {
     /* Return sections with filtered items, that match users search term */
     filteredSections() {
       const sections = this.singleSectionView || this.sections;
+      const showHidden = this.isEditMode || !!this.searchValue || !!this.singleSectionView;
       return sections.map((section) => ({
         ...section,
-        filteredItems: this.filterTiles(section.items, section.name),
+        filteredItems: this.filterTiles(section.items, section.name, { showHidden }),
       }));
     },
     /* Updates layout (when button clicked), and saves in local storage */

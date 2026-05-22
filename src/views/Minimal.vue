@@ -103,9 +103,10 @@ export default {
   computed: {
     /* Just the items to display, filtered by search term */
     filteredSections() {
+      const showHidden = this.isEditMode || !!this.searchValue;
       return (this.sections || []).map((section) => ({
         ...section,
-        filteredItems: this.filterTiles(section.items, section.name),
+        filteredItems: this.filterTiles(section.items, section.name, { showHidden }),
       }));
     },
   },
