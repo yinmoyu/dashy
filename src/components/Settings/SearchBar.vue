@@ -71,16 +71,20 @@ export default {
     if (this.emitFrame != null) cancelAnimationFrame(this.emitFrame);
   },
   methods: {
-    /* Call correct function dependending on which key is pressed */
+    /* Route global keystrokes to search / hotkeys / nav
+     * Bails out for modifier combos, and keystrokes on already focused inputs */
     handleKeyPress(event) {
-      const currentElem = document.activeElement.id;
+      if (!this.active || event.ctrlKey || event.metaKey || event.altKey) return;
+      const target = event.target;
+      const inFilter = target?.id === 'filter-tiles';
+      const inOtherEditable = !inFilter && target && (
+        /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName) || target.isContentEditable
+      );
+      if (inOtherEditable) return;
       const { key, keyCode } = event;
-      const notAlreadySearching = currentElem !== 'filter-tiles';
-      // If a modal is open, then do nothing
-      if (!this.active) return;
-      if (/^[/:!a-zA-Z]$/.test(key) && notAlreadySearching) {
-        // Letter or bang key pressed - start searching
-        if (this.$refs.filter) this.$refs.filter.focus();
+      // Letter or bang key pressed - start searching
+      if (/^[/:!a-zA-Z]$/.test(key) && !inFilter) {
+        this.$refs.filter?.focus();
         this.userIsTypingSomething();
       } else if (/^[0-9]$/.test(key)) {
         // Number key pressed, check if user has a custom binding
@@ -109,7 +113,7 @@ export default {
         this.emitFrame = null;
       }
       this.$emit('user-is-searchin', '');
-      document.activeElement.blur();
+      this.$refs.filter?.blur();
       this.akn.resetIndex();
     },
     /* If configured, launch specific app when hotkey pressed */

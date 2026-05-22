@@ -25,7 +25,6 @@
           :groupId="makeSectionId(section)"
           :items="section.filteredItems"
           :widgets="section.widgets"
-          :searchTerm="searchValue"
           :itemSize="itemSizeBound"
           @itemClicked="finishedSearching()"
           @change-modal-visibility="updateModalVisibility"
@@ -113,7 +112,7 @@ export default {
       const sections = this.singleSectionView || this.sections;
       return sections.map((section) => ({
         ...section,
-        filteredItems: this.filterTiles(section.items, this.searchValue),
+        filteredItems: this.filterTiles(section.items),
       }));
     },
     /* Updates layout (when button clicked), and saves in local storage */

@@ -163,13 +163,6 @@ const HomeMixin = {
       }
       return '';
     },
-    /* Extracts the site name from domain, used for the searching functionality */
-    getDomainFromUrl(url) {
-      if (!url) return '';
-      const urlPattern = /^(?:https?:\/\/)?(?:w{3}\.)?([a-z\d.-]+)\.(?:[a-z.]{2,10})(?:[/\w.-]*)*/;
-      const domainPattern = url.match(urlPattern);
-      return domainPattern ? domainPattern[1] : '';
-    },
   },
 };
 

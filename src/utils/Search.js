@@ -3,18 +3,6 @@
 /* Tile filtering utility */
 import ErrorHandler from '@/utils/logging/ErrorHandler';
 
-/**
- * Extracts the site name from domain
- * @param {string} url The URL to process
- * @returns {string} The hostname from URL
- */
-const getDomainFromUrl = (url) => {
-  if (!url) return '';
-  const urlPattern = /^(?:https?:\/\/)?(?:w{3}\.)?([a-z\d.-]+)\.(?:[a-z.]{2,10})(?:[/\w.-]*)*/;
-  const domainPattern = urlPattern.exec(url);
-  return domainPattern ? domainPattern[1] : '';
-};
-
 /* Normalize a string for case/punctuation-insensitive matching */
 const NORMALIZE_RE = /[^\w\s\p{Alpha}]/giu;
 const normalize = (input) => (input == null ? '' : input.toString().toLowerCase().replace(NORMALIZE_RE, ''));
@@ -27,7 +15,7 @@ const buildHaystack = (tile) => {
     title, description, provider, url, tags,
   } = tile;
   const tagsStr = Array.isArray(tags) ? tags.join(' ') : (tags || '');
-  return normalize(`${title || ''} ${provider || ''} ${description || ''} ${tagsStr} ${getDomainFromUrl(url)}`);
+  return normalize(`${title || ''} ${provider || ''} ${description || ''} ${tagsStr} ${url || ''}`);
 };
 
 const getHaystack = (tile) => {

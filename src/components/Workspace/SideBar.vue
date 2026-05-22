@@ -13,7 +13,7 @@
       <transition name="slide">
         <SideBarSection
           v-if="isOpen[index]"
-          :items="filterTiles(section.items)"
+          :items="visibleItems(section.items)"
           @launch-app="launchApp"
         />
       </transition>
@@ -99,8 +99,9 @@ export default {
         });
       });
     },
-    /* Return a list with visible items on a section to the user or guest */
-    filterTiles(allTiles) {
+    /* Return the items in a section that the current user/guest can see
+     * and that aren't explicitly hidden from the workspace view */
+    visibleItems(allTiles) {
       if (!allTiles) return [];
       const currentUser = getCurrentUser();
       const isGuest = isLoggedInAsGuest();
