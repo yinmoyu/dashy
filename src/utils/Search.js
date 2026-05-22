@@ -58,11 +58,14 @@ export const searchTiles = (allTiles, searchTerm) => {
   });
 };
 
+const escapeRegex = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const sortedBangs = (bangList) => Object.keys(bangList || {}).sort((a, b) => b.length - a.length);
+const bangPattern = (bang, flags = '') => new RegExp(`(^|\\s)${escapeRegex(bang)}(?=\\s|$)`, flags);
+
 /* From a list of search bangs, return the URL associated with it */
 export const getSearchEngineFromBang = (searchQuery, bangList) => {
-  const bangNames = Object.keys(bangList);
-  const foundBang = bangNames.find((bang) => searchQuery.includes(bang));
-  return bangList[foundBang];
+  const found = sortedBangs(bangList).find((bang) => bangPattern(bang).test(searchQuery));
+  return bangList[found];
 };
 
 /* For a given search engine key, return the corresponding URL, or throw error */
@@ -78,10 +81,8 @@ export const findUrlForSearchEngine = (searchEngine, availableSearchEngines) => 
   return undefined;
 };
 
-/* Removes all known bangs from a search query */
-export const stripBangs = (searchQuery, bangList) => {
-  const bangNames = Object.keys(bangList || {});
-  let q = searchQuery;
-  bangNames.forEach((bang) => { q = q.replace(bang, ''); });
-  return q.trim();
-};
+/* Removes all known bangs from a search query, leaving the actual terms */
+export const stripBangs = (searchQuery, bangList) => sortedBangs(bangList)
+  .reduce((q, bang) => q.replace(bangPattern(bang, 'g'), '$1'), searchQuery)
+  .replace(/\s+/g, ' ')
+  .trim();
