@@ -52,6 +52,7 @@ const bangPattern = (bang, flags = '') => new RegExp(`(^|\\s)${escapeRegex(bang)
 
 /* From a list of search bangs, return the URL associated with it */
 export const getSearchEngineFromBang = (searchQuery, bangList) => {
+  if (!bangList) return undefined;
   const found = sortedBangs(bangList).find((bang) => bangPattern(bang).test(searchQuery));
   return bangList[found];
 };
@@ -74,3 +75,12 @@ export const stripBangs = (searchQuery, bangList) => sortedBangs(bangList)
   .reduce((q, bang) => q.replace(bangPattern(bang, 'g'), '$1'), searchQuery)
   .replace(/\s+/g, ' ')
   .trim();
+
+/* Check if a given input looks like a URL (to open directly on enter, if configured) */
+export const isUrlLike = (input) => {
+  const s = (input || '').trim();
+  if (!s || /\s/.test(s)) return false;
+  if (/^https?:\/\//i.test(s)) return true;
+  if (/^localhost(:\d+)?(\/\S*)?$/i.test(s)) return true;
+  return /^[\w-]+(\.[\w-]+)*(:\d+)?(\/\S*)?$/.test(s) && /[.:/]/.test(s);
+};
