@@ -6,6 +6,9 @@
         id="filter-tiles"
         v-model="input"
         ref="filter"
+        role="searchbox"
+        :aria-label="$t('search.search-label')"
+        aria-keyshortcuts="Enter Escape"
         :placeholder="$t('search.search-placeholder')"
         v-on:input="userIsTypingSomething"
         @keydown.esc="clearFilterInput" />
@@ -25,7 +28,9 @@ import router from '@/router';
 import ArrowKeyNavigation from '@/utils/ArrowKeyNavigation';
 import ErrorHandler from '@/utils/logging/ErrorHandler';
 import { getCustomKeyShortcuts } from '@/utils/config/ConfigHelpers';
-import { getSearchEngineFromBang, findUrlForSearchEngine, stripBangs } from '@/utils/Search';
+import {
+  getSearchEngineFromBang, findUrlForSearchEngine, stripBangs, isUrlLike,
+} from '@/utils/Search';
 import {
   searchEngineUrls,
   defaultSearchEngine,
@@ -55,7 +60,7 @@ export default {
       return this.$store.getters.webSearch || {};
     },
     urlDetected() {
-      return this.searchPrefs.openUrlsDirectly && this.isUrlLike(this.input.trim());
+      return this.searchPrefs.openUrlsDirectly && isUrlLike(this.input);
     },
     searchNote() {
       if (this.urlDetected) return this.$t('search.enter-to-open-url');
@@ -83,12 +88,16 @@ export default {
       if (inOtherEditable) return;
       const { key, keyCode } = event;
       // Letter or bang key pressed - start searching
-      if (/^[/:!a-zA-Z]$/.test(key) && !inFilter) {
+      if (/^([/:!]|\p{L})$/u.test(key) && !inFilter) {
         this.$refs.filter?.focus();
         this.userIsTypingSomething();
       } else if (/^[0-9]$/.test(key)) {
-        // Number key pressed, check if user has a custom binding
-        this.handleHotKey(key);
+        // Digit: fire bound hotkey if one exists
+        if (this.handleHotKey(key)) return;
+        if (!inFilter) {
+          this.$refs.filter?.focus();
+          this.userIsTypingSomething();
+        }
       } else if (keyCode >= 37 && keyCode <= 40) {
       // Arrow key pressed - start navigation
         this.akn.arrowNavigation(keyCode);
@@ -116,15 +125,16 @@ export default {
       this.$refs.filter?.blur();
       this.akn.resetIndex();
     },
-    /* If configured, launch specific app when hotkey pressed */
+    /* Launch the app bound to the pressed digit, if one is configured.
+     * Returns true when a hotkey fired, so the caller can fall through to
+     * normal search-bar focus when no binding exists. */
     handleHotKey(key) {
       const sections = this.$store.getters.sections || [];
-      const usersHotKeys = this.getCustomKeyShortcuts(sections);
-      usersHotKeys.forEach((hotkey) => {
-        if (hotkey.hotkey === parseInt(key, 10)) {
-          if (hotkey.url) window.open(hotkey.url, '_blank');
-        }
-      });
+      const match = this.getCustomKeyShortcuts(sections)
+        .find((h) => h.hotkey === parseInt(key, 10));
+      if (!match?.url) return false;
+      window.open(match.url, '_blank');
+      return true;
     },
     /* Launch search results, with users desired opening method */
     launchWebSearch(url, method) {
@@ -144,40 +154,46 @@ export default {
       }
     },
 
+    /* Launches the first result (only used when disableWebSearch: true) */
+    openFirstResult() {
+      const first = document.querySelector('.item:not(.add-new)');
+      if (!first) return;
+      first.click();
+      this.clearFilterInput();
+    },
+
     /* Launch web search, to correct search engine, passing in users query */
     searchSubmitted() {
-      // Get search preferences from appConfig
       const { searchPrefs } = this;
-      if (!searchPrefs.disableWebSearch) { // Only proceed if user hasn't disabled web search
-        const input = this.input.trim();
-        const openingMethod = searchPrefs.openingMethod || defaultSearchOpeningMethod;
-        // If openUrlsDirectly enabled and input looks like a URL, navigate directly
-        if (searchPrefs.openUrlsDirectly && input && this.isUrlLike(input)) {
-          const url = /^https?:\/\//.test(input) ? input : `https://${input}`;
-          this.launchWebSearch(url, openingMethod);
-          this.clearFilterInput();
-          return;
-        }
-        const bangList = { ...defaultSearchBangs, ...(searchPrefs.searchBangs || {}) };
-        const searchBang = getSearchEngineFromBang(this.input, bangList);
-        const searchEngine = searchPrefs.searchEngine || defaultSearchEngine;
-        // Use either search bang, or preffered search engine
-        const desiredSearchEngine = searchBang || searchEngine;
-        const isCustomSearch = !searchBang
-          && searchPrefs.searchEngine === 'custom' && searchPrefs.customSearchEngine;
-        let searchUrl = isCustomSearch
-          ? searchPrefs.customSearchEngine
-          : findUrlForSearchEngine(desiredSearchEngine, searchEngineUrls);
-        if (searchUrl) { // Append search query to URL, and launch
-          searchUrl += encodeURIComponent(stripBangs(this.input, bangList));
-          this.launchWebSearch(searchUrl, openingMethod);
-          this.clearFilterInput();
-        }
+      const input = this.input.trim();
+      if (!input) return;
+      if (searchPrefs.disableWebSearch) {
+        this.openFirstResult();
+        return;
       }
-    },
-    /* Detect if input looks like a URL (has TLD, no spaces) */
-    isUrlLike(input) {
-      return /^(https?:\/\/)?([\w-]+\.)+[a-zA-Z]{2,}(\/\S*)?$/.test(input.trim());
+      const openingMethod = searchPrefs.openingMethod || defaultSearchOpeningMethod;
+      // If openUrlsDirectly enabled and input looks like a URL, navigate directly
+      if (searchPrefs.openUrlsDirectly && isUrlLike(input)) {
+        const url = /^https?:\/\//.test(input) ? input : `https://${input}`;
+        this.launchWebSearch(url, openingMethod);
+        this.clearFilterInput();
+        return;
+      }
+      const bangList = { ...defaultSearchBangs, ...(searchPrefs.searchBangs || {}) };
+      const searchBang = getSearchEngineFromBang(this.input, bangList);
+      const searchEngine = searchPrefs.searchEngine || defaultSearchEngine;
+      // Use either search bang, or preffered search engine
+      const desiredSearchEngine = searchBang || searchEngine;
+      const isCustomSearch = !searchBang
+        && searchPrefs.searchEngine === 'custom' && searchPrefs.customSearchEngine;
+      let searchUrl = isCustomSearch
+        ? searchPrefs.customSearchEngine
+        : findUrlForSearchEngine(desiredSearchEngine, searchEngineUrls);
+      if (searchUrl) { // Append search query to URL, and launch
+        searchUrl += encodeURIComponent(stripBangs(this.input, bangList));
+        this.launchWebSearch(searchUrl, openingMethod);
+        this.clearFilterInput();
+      }
     },
   },
 };
