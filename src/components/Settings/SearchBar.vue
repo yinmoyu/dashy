@@ -44,6 +44,7 @@ export default {
       input: '', // Users current search term
       akn: new ArrowKeyNavigation(), // Class that manages arrow key naviagtion
       getCustomKeyShortcuts,
+      emitFrame: null, // Pending requestAnimationFrame id, for coalescing keystrokes
     };
   },
   computed: {
@@ -67,6 +68,7 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('keydown', this.handleKeyPress);
+    if (this.emitFrame != null) cancelAnimationFrame(this.emitFrame);
   },
   methods: {
     /* Call correct function dependending on which key is pressed */
@@ -93,14 +95,22 @@ export default {
     },
     /* Emmits users's search term up to parent */
     userIsTypingSomething() {
-      this.$emit('user-is-searchin', this.input);
+      if (this.emitFrame != null) return;
+      this.emitFrame = requestAnimationFrame(() => {
+        this.emitFrame = null;
+        this.$emit('user-is-searchin', this.input);
+      });
     },
     /* Resets everything to initial state, when user is finished */
     clearFilterInput() {
-      this.input = ''; // Clear input model
-      this.userIsTypingSomething(); // Emmit new empty value
-      document.activeElement.blur(); // Remove focus
-      this.akn.resetIndex(); // Reset current element index
+      this.input = '';
+      if (this.emitFrame != null) {
+        cancelAnimationFrame(this.emitFrame);
+        this.emitFrame = null;
+      }
+      this.$emit('user-is-searchin', '');
+      document.activeElement.blur();
+      this.akn.resetIndex();
     },
     /* If configured, launch specific app when hotkey pressed */
     handleHotKey(key) {

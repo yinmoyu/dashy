@@ -36,7 +36,8 @@ import SideBarItem from '@/components/Workspace/SideBarItem.vue';
 import SideBarSection from '@/components/Workspace/SideBarSection.vue';
 import IconHome from '@/assets/interface-icons/application-home.svg';
 import IconMinimalView from '@/assets/interface-icons/application-minimal.svg';
-import { checkItemVisibility } from '@/utils/CheckItemVisibility';
+import { getCurrentUser, isLoggedInAsGuest } from '@/utils/auth/Auth';
+import { isVisibleToUser } from '@/utils/IsVisibleToUser';
 import { makeRoutePath, resolveRouteIntent } from '@/utils/config/ConfigHelpers';
 
 export default {
@@ -100,11 +101,11 @@ export default {
     },
     /* Return a list with visible items on a section to the user or guest */
     filterTiles(allTiles) {
-      if (!allTiles) {
-        return [];
-      }
-      return allTiles.filter((tile) => checkItemVisibility(tile)
-        && !tile.displayData?.hideFromWorkspace);
+      if (!allTiles) return [];
+      const currentUser = getCurrentUser();
+      const isGuest = isLoggedInAsGuest();
+      return allTiles.filter((tile) => !tile.displayData?.hideFromWorkspace
+        && isVisibleToUser(tile.displayData || {}, currentUser, isGuest));
     },
     /* Build a URL for the given view, preserving the current sub-page and section */
     pathFor(view) {

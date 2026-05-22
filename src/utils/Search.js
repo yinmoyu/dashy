@@ -15,17 +15,28 @@ const getDomainFromUrl = (url) => {
   return domainPattern ? domainPattern[1] : '';
 };
 
-/**
- * Compares search term to a given data attribute
- * Ignores case, special characters and order
- * @param {string or other} compareStr The value to compare to
- * @param {string} searchStr The users search term
- * @returns {boolean} true if a match, otherwise false
- */
-const filterHelper = (compareStr, searchStr) => {
-  if (!compareStr) return false;
-  const process = (input) => input?.toString().toLowerCase().replace(/[^\w\s\p{Alpha}]/giu, '');
-  return process(searchStr).split(/\s/).every(word => process(compareStr).includes(word));
+/* Normalize a string for case/punctuation-insensitive matching */
+const NORMALIZE_RE = /[^\w\s\p{Alpha}]/giu;
+const normalize = (input) => (input == null ? '' : input.toString().toLowerCase().replace(NORMALIZE_RE, ''));
+
+/* Per-tile cache of the concatenated searchable text */
+const haystackCache = new WeakMap();
+
+const buildHaystack = (tile) => {
+  const {
+    title, description, provider, url, tags,
+  } = tile;
+  const tagsStr = Array.isArray(tags) ? tags.join(' ') : (tags || '');
+  return normalize(`${title || ''} ${provider || ''} ${description || ''} ${tagsStr} ${getDomainFromUrl(url)}`);
+};
+
+const getHaystack = (tile) => {
+  let h = haystackCache.get(tile);
+  if (h === undefined) {
+    h = buildHaystack(tile);
+    haystackCache.set(tile, h);
+  }
+  return h;
 };
 
 /**
@@ -37,17 +48,13 @@ const filterHelper = (compareStr, searchStr) => {
  * @returns A filtered array of tiles
  */
 export const searchTiles = (allTiles, searchTerm) => {
-  if (!searchTerm) return allTiles; // If no search term, then return all
-  if (!allTiles) return []; // If no data, then skip
+  if (!searchTerm) return allTiles;
+  if (!allTiles) return [];
+  const words = normalize(searchTerm).split(/\s+/).filter(Boolean);
+  if (!words.length) return allTiles;
   return allTiles.filter((tile) => {
-    const {
-      title, description, provider, url, tags,
-    } = tile;
-    return filterHelper(title, searchTerm)
-      || filterHelper(provider, searchTerm)
-      || filterHelper(description, searchTerm)
-      || filterHelper(tags, searchTerm)
-      || filterHelper(getDomainFromUrl(url), searchTerm);
+    const haystack = getHaystack(tile);
+    return words.every((word) => haystack.includes(word));
   });
 };
 
