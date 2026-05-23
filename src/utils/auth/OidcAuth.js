@@ -72,6 +72,10 @@ class OidcAuth {
     this.userManager.events.addUserSignedOut(() => {
       statusMsg('OIDC', 'User signed out at provider');
     });
+    // Mirror token renewals into localStorage so Bearer attachment stays fresh
+    this.userManager.events.addUserLoaded((user) => {
+      if (user?.id_token) localStorage.setItem(localStorageKeys.ID_TOKEN, user.id_token);
+    });
   }
 
   async login() {
