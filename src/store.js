@@ -479,6 +479,7 @@ const store = createStore({
         // Set the state, and return data
         commit(SET_ROOT_CONFIG, data);
         commit(CRITICAL_ERROR_MSG, null);
+        if (!data._bootstrap) sessionStorage.removeItem(SUB_CONFIG_RELOAD_KEY);
         return data;
       } catch (fetchError) {
         if (fetchError.response) {
