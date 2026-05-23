@@ -1,36 +1,41 @@
 
 <h1 align="center">Dashy</h1>
 <p align="center">
-  <i>Dashy helps you organize your self-hosted services by making them accessible from a single place</i>
+  <i>The most customizable dashboard for self-hosters</i><br>
+  <b>Dashy is the homepage for your homelab</b>
    <br/>
   <img width="120" src="https://i.ibb.co/yhbt6CY/dashy.png" />
   <br/>
   <b><a href="./docs/showcase.md">User Showcase</a></b> | <b><a href="https://demo.dashy.to">Live Demo</a></b> | <b><a href="./docs/quick-start.md">Getting Started</a></b> | <b><a href="https://dashy.to/docs">Documentation</a></b> | <b><a href="https://github.com/Lissy93/dashy">GitHub</a></b>
 </p>
 
----
+<h4><p align="center">Kindly sponsored by</p></h4>
 
-<p align="center">
-<sup>Dashy is kindly sponsored by <a href="https://ssdnodes.com/dashy">SSD Nodes</a> - Affordable VPS hosting for self-hosters</sup><br>
-  <a href="https://ssdnodes.com/dashy" target="_blank">
-    <img src="https://pixelflare.cc/alicia/sponsors/ssd-nodes-sponsorship.png" width="400" alt="SSD Nodes" />
-  </a>
-</p>
-
-<p align="center">
-<br>
-<sup>Dashy is kindly sponsored by <a href="https://umbrel.com?ref=dashy">Umbrel</a> - the personal home cloud and OS for self-hosting</sup><br>
-<a href="https://umbrel.com?ref=dashy">
-<img width="400" src="https://cdn.as93.net/sponsors/umbrel-banner.jpg" />
-</a>
-</p>
-
-<p align="center">
-<sup>Dashy is kindly sponsored by <a href="https://www.testmuai.com/?utm_medium=sponsor&utm_source=dashy">TestMu AI</a> - The world’s first full-stack Agentic AI Quality Engineering platform</sup><br>
-  <a href="https://www.testmuai.com/?utm_medium=sponsor&utm_source=dashy" target="_blank">
-    <img src="https://cdn.as93.net/sponsors/test-mu-ai.png" width="400" alt="LambdaTest" />
-  </a>
-</p>
+<table align="center">
+  <tr>
+    <td align="center" width="33%">
+      <a href="https://ssdnodes.com/dashy" target="_blank">
+        <img src="https://pixelflare.cc/alicia/sponsors/ssd-nodes-sponsorship.png" width="260" alt="SSD Nodes"><br>
+        <b>SSD Nodes</b>
+      </a><br>
+      <sub>Affordable VPS hosting for self-hosters</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://umbrel.com?ref=dashy" target="_blank">
+        <img src="https://cdn.as93.net/sponsors/umbrel-banner.jpg" width="260" alt="Umbrel"><br>
+        <b>Umbrel</b>
+      </a><br>
+      <sub>Personal home cloud and OS for self-hosting</sub>
+    </td>
+    <td align="center" width="33%">
+      <a href="https://www.testmuai.com/?utm_medium=sponsor&utm_source=dashy" target="_blank">
+        <img src="https://cdn.as93.net/sponsors/test-mu-ai.png" width="260" alt="TestMu AI"><br>
+        <b>TestMu AI</b>
+      </a><br>
+      <sub>Full-stack Agentic AI Quality Engineering platform</sub>
+    </td>
+  </tr>
+</table>
 
 <details>
   <summary><b>Table of Contents</b></summary>
@@ -424,7 +429,7 @@ Dashy supports multiple languages and locales. When available, your language sho
 - 🇦🇪 **Arabic**: `ar` - Contributed by **[@kayedspace](https://github.com/kayedspace)**
 - 🇧🇩 **Bengali**: `bn` - Contributed by **[@soaibsafi](https://github.com/soaibsafi)**
 - 🇧🇬 **Bulgarian**: `bg` - Contributed by **[@asenov](https://github.com/asenov)**
-- 🇨🇳 **Chinese**: `cn` - Contributed by **[@FormatToday](https://github.com/FormatToday)**
+- 🇨🇳 **Chinese**: `zh-CN` - Contributed by **[@FormatToday](https://github.com/FormatToday)**
 - 🇨🇿 **Czech**: `cs` - Contributed by **[@Tuzi555](https://github.com/Tuzi555)**
 - 🇩🇰 **Danish**: `da` - Contributed by **[@lordpansar](https://github.com/lordpansar)**
 - 🇳🇱 **Dutch**: `nl` - Contributed by **[@evroon](https://github.com/evroon)**
@@ -440,11 +445,11 @@ Dashy supports multiple languages and locales. When available, your language sho
 - 🇳🇴 **Norwegian Bokmål**: `nb` - Contributed by **[@rubjo](https://github.com/rubjo)**
 - 🇵🇱 **Polish**: `pl` - Contributed by **[@skaarj1989](https://github.com/skaarj1989)**
 - 🇵🇹 **Portuguese**: `pt` - Contributed by **[@LeoColman](https://github.com/LeoColman)**
+- 🇷🇴 **Romanian**: `ro` - Contributed by **[@z3r0l1nk](https://github.com/z3r0l1nk)**
 - 🛰️ **Galician**: `gl` - Contributed by **[@pvillaverde](https://github.com/pvillaverde)**
-- 🇷🇺 **Russian**: `ru` -Contributed by **[@sasetz](https://github.com/sasetz)**
+- 🇷🇺 **Russian**: `ru` - Contributed by **[@sasetz](https://github.com/sasetz)**
 - 🇸🇰 **Slovak**: `sk` - Contributed by **[@Smexhy](https://github.com/Smexhy)**
 - 🇸🇮 **Slovenian**: `sl` - Contributed by **[@UrekD](https://github.com/UrekD)**
-- 🇰🇬 **Kyrgyz**: `ky` - Contributed by **[@noblepower1337](https://github.com/noblepower1337)**
 - 🇪🇸 **Spanish**: `es` - Contributed by **[@lu4t](https://github.com/lu4t)**
 - 🇸🇪 **Swedish**: `sv` - Contributed by **[@BOZG](https://github.com/BOZG)**
 - 🇹🇼 **Traditional Chinese**: `zh-TW` - Contributed by **[@stanly0726](https://github.com/stanly0726)**
@@ -489,9 +494,9 @@ pages:
 
 ## System Requirements 📊
 
-If running on bare metal, Dashy requires [Node](https://nodejs.org/en/) V 18.0.0 or later, LTS (20.x) is recommended.
+If running on bare metal, Dashy requires [Node](https://nodejs.org/en/) V 20.0.0 or later, LTS (22.x) is recommended.
 
-If running in Docker container, the recommended base image is Alpine (3.19)
+If running in Docker container, the recommended base image is Alpine (3.21)
 
 The hardware requirements vary depending on where and how you are running Dashy. Generally speaking, on a bare-metal system or Docker container, 1GB of memory should be more than enough, and depending on whether you are using your own assets, then 1GB of disk space should be sufficient. 
 
@@ -658,7 +663,7 @@ A few self-hosted web apps serve a similar purpose to Dashy. If you're looking f
 Dashy is Licensed under [MIT X11](https://en.wikipedia.org/wiki/MIT_License)
 
 ```
-Copyright © 2021-2024 Alicia Sykes <https://aliciasykes.com>
+Copyright © Alicia Sykes <https://aliciasykes.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this
 software and associated documentation files (the "Software"), to deal in the Software
@@ -695,7 +700,7 @@ For more info, see TLDR Legal's [Explanation of MIT](https://tldrlegal.com/licen
 
 <!-- License + Copyright -->
 <p  align="center">
-  <i>© <a href="https://aliciasykes.com">Alicia Sykes</a> 2024</i><br>
+  <i>© <a href="https://aliciasykes.com">Alicia Sykes</a> 2019 - 2026</i><br>
   <i>Licensed under <a href="https://gist.github.com/Lissy93/143d2ee01ccc5c052a17">MIT</a></i><br>
   <a href="https://github.com/lissy93"><img src="https://i.ibb.co/4KtpYxb/octocat-clean-mini.png" /></a><br>
   <sup>Thanks for visiting :)</sup>
