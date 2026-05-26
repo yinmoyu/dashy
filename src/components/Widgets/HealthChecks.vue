@@ -20,7 +20,6 @@
 
 <script>
 import WidgetMixin from '@/mixins/WidgetMixin';
-import { widgetApiEndpoints } from '@/utils/config/defaults';
 import { capitalize, timestampToDateTime } from '@/utils/MiscHelpers';
 
 export default {
@@ -32,19 +31,19 @@ export default {
     };
   },
   computed: {
+    baseUrl() {
+      return this.options.host || 'https://healthchecks.io';
+    },
     /* API endpoint, either for self-hosted or managed instance */
     endpoint() {
-      if (this.options.host) return `${this.options.host}/api/v1/checks`;
-      return `${widgetApiEndpoints.healthChecks}`;
+      return `${this.baseUrl}/api/v1/checks/`;
     },
-    apiKey() {
-      if (!this.options.apiKey) {
-        this.error('An API key is required, please see the docs for more info');
-      }
-      if (typeof this.options.apiKey === 'string') {
-        return [this.parseAsEnvVar(this.options.apiKey)];
-      }
-      return this.options.apiKey;
+    /* User's API key(s), normalised to an array, or null if unset */
+    apiKeys() {
+      const { apiKey } = this.options;
+      if (!apiKey) return null;
+      const keys = Array.isArray(apiKey) ? apiKey : [apiKey];
+      return keys.map((key) => this.parseAsEnvVar(key));
     },
   },
   methods: {
@@ -60,21 +59,34 @@ export default {
     formatDate(timestamp) {
       return timestampToDateTime(timestamp);
     },
-    /* Make GET request to CoinGecko API endpoint */
     fetchData() {
+      if (!this.apiKeys) {
+        this.error('An API key is required, please see the docs for more info');
+        this.finishLoading();
+        return;
+      }
       this.overrideProxyChoice = true;
-      const results = [];
-      this.apiKey.forEach((key) => {
-        const authHeaders = { 'X-Api-Key': key };
-        this.makeRequest(this.endpoint, authHeaders).then(
-          (response) => { this.processData(response, results); },
-        );
+      const requests = this.apiKeys.map(
+        (key) => this.makeRequest(this.endpoint, { 'X-Api-Key': key }),
+      );
+      Promise.allSettled(requests).then((outcomes) => {
+        const results = [];
+        outcomes.forEach((outcome) => {
+          if (outcome.status === 'fulfilled') this.processData(outcome.value, results);
+        });
+        results.sort((a, b) => (a.name > b.name ? 1 : -1));
+        this.crons = results;
       });
-      results.sort((a, b) => ((a.name > b.name) ? 1 : -1));
-      this.crons = results;
     },
-    /* Assign data variables to the returned data */
+    /* Map the API response into the cron list, guarding against bad responses */
     processData(data, results) {
+      if (!data || !Array.isArray(data.checks)) {
+        this.error(
+          'Unexpected response, please check your host URL and API key are correct.'
+          + ' useProxy may be required if your Healchecks API is blocking Dashy with CORS'
+        );
+        return;
+      }
       data.checks.forEach((cron) => {
         results.push({
           id: cron.slug,
@@ -87,11 +99,9 @@ export default {
           url: this.makeUrl(cron.unique_key),
         });
       });
-      return results;
     },
     makeUrl(cronId) {
-      const base = this.options.host || 'https://healthchecks.io';
-      return `${base}/checks/${cronId}/details`;
+      return `${this.baseUrl}/checks/${cronId}/details`;
     },
     pingTimeTooltip(cron) {
       const { lastPing, nextPing, pingCount } = cron;
