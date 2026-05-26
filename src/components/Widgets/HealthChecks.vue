@@ -5,7 +5,7 @@
     :key="cron.id"
   >
     <div class="status">
-      <p :class="cron.status">{{ formatStatus(cron.status) }}</p>
+      <p :class="cron.status || 'unknown'">{{ formatStatus(cron.status) }}</p>
     </div>
     <div
       class="info"
@@ -47,14 +47,12 @@ export default {
     },
   },
   methods: {
+    /* Make status summary (emoji + name) */
     formatStatus(status) {
-      let symbol = '';
-      if (status === 'up') symbol = '✔';
-      if (status === 'down') symbol = '✘';
-      if (status === 'new') symbol = '❖';
-      if (status === 'paused') symbol = '⏸';
-      if (status === 'running') symbol = '▶';
-      return `${symbol} ${capitalize(status)}`;
+      const symbols = {
+        up: '✔', down: '✘', new: '❖', paused: '⏸', grace: '⚠', started: '▶',
+      };
+      return `${symbols[status] || '❔'} ${capitalize(status || 'unknown')}`;
     },
     formatDate(timestamp) {
       return timestampToDateTime(timestamp);
@@ -133,7 +131,9 @@ export default {
       &.up { color: var(--success); }
       &.down { color: var(--danger); }
       &.new { color: var(--widget-text-color); }
-      &.running { color: var(--warning); }
+      &.grace { color: var(--warning); }
+      &.unknown { color: var(--warning); }
+      &.started { color: var(--info); }
       &.paused { color: var(--info); }
     }
   }
