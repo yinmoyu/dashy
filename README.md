@@ -65,7 +65,6 @@
   - [💖 Supporting Dashy](#supporting-dashy-)
   - [🏆 Credits](#credits-)
   - [🧱 Developing](#developing-)
-  - [🗞️ Release Schedule](#release-schedule-)
   - [📘 Documentation](#documentation-)
   - [🛣️ Roadmap](#roadmap-)
   - [🙌 Alternatives](#alternatives-)
@@ -101,11 +100,11 @@
 
 ## Demo ⚡
 
-**Live Instances**: [Demo 1](https://demo.dashy.to) (Live Demo) ┆ [Demo 2](https://live.dashy.to) (Dashy Links) ┆ [Demo 3](https://dev.dashy.to) (Dev Preview)
+**Live Instances**: [Demo](https://demo.dashy.to) (Live Demo) ┆ [Dev Preview](https://dev.dashy.to) (Dev Preview)
 
 **Screenshots**: Checkout the [Showcase](./docs/showcase.md), to see example dashboards from the community
 
-**Spin up your own demo**: [![One-Click Deploy with PWD](https://img.shields.io/badge/Play--with--Docker-Deploy-2496ed?style=flat-square&logo=docker)](https://labs.play-with-docker.com/?stack=https://raw.githubusercontent.com/Lissy93/dashy/master/docker-compose.yml) or [`docker run -p 8080:8080 lissy93/dashy`](./docs/quick-start.md)
+**Try it yourself**: [`docker run -p 8080:8080 lissy93/dashy`](./docs/quick-start.md)
 
 
 <p align="center">
@@ -125,13 +124,13 @@
 
 You will need [Docker](https://docs.docker.com/get-docker/) installed on your system
 
-```
-docker run -p 8080:8080 lissy93/dashy
+```bash
+docker run -p 4000:8080 lissy93/dashy
 ```
 
 Or
 
-```docker
+```bash
 docker run -d \
   -p 4000:8080 \
   -v /path/to/your/user-data:/app/user-data \
@@ -140,13 +139,13 @@ docker run -d \
   lissy93/dashy:latest
 ```
 
-[![Dashy on Docker Hub](https://dockeri.co/image/lissy93/dashy)](https://hub.docker.com/r/lissy93/dashy)
+To use with compose, see our sample [`docker-compose.yml`](https://github.com/lissy93/dashy/blob/master/docker-compose.yml).
 
 The mounted `/app/user-data` directory **must** contain at least a `conf.yml`.
 It can also hold sub-config files, item icons, fonts, custom CSS, or anything else you want served from the web root.
 
-Dashy is also available via GHCR (`ghcr.io/lissy93/dashy`).
-To use with compose, see our sample [`docker-compose.yml`](https://github.com/lissy93/dashy/blob/master/docker-compose.yml).
+Dashy is distributed both on [DockerHub](https://hub.docker.com/r/lissy93/dashy) (`lissy93/dashy`) and [GHCR](https://github.com/lissy93/dashy/pkgs/container/dashy) (`ghcr.io/lissy93/dashy`).
+
 You can either use `:latest` or pin to specific versions (like `4.0.0`).
 All images are multi-arch (works on amd64, arm64, and arm/v7).
 
@@ -154,7 +153,7 @@ All images are multi-arch (works on amd64, arm64, and arm/v7).
 
 ### Deploying from Source 🔨
 
-You will need [git](https://git-scm.com/downloads), the latest or LTS version of [Node.js](https://nodejs.org/) and _(optionally)_ [Yarn](https://yarnpkg.com/) installed on your system.
+You'll need Node (20+) installed, as well as git and `yarn` enabled.
 
 - Clone the Repo: `git clone https://github.com/Lissy93/dashy.git` and `cd dashy`
 - Configuration: Fill in your settings in `./user-data/conf.yml`
@@ -162,15 +161,14 @@ You will need [git](https://git-scm.com/downloads), the latest or LTS version of
 - Build: `yarn build`
 - Run: `yarn start`
 
-> See docs: [Full list of Dashy's commands](./docs/management.md#basic-commands)
+> See docs: [Full list of Dashy's commands](./docs/management.md#running-commands)
 
 ### Deploy to the Cloud ☁️
 
 Dashy supports **1-Click deployments** on several popular cloud platforms. To spin up a new instance, just click a link below:
 - [<img src="https://i.ibb.co/ZxtzrP3/netlify.png" width="18"/> Deploy to Netlify](https://app.netlify.com/start/deploy?repository=https://github.com/lissy93/dashy)
-- [<img src="https://i.ibb.co/d2P1WZ7/heroku.png" width="18"/> Deploy to Heroku](https://heroku.com/deploy?template=https://github.com/Lissy93/dashy)
 - [<img src="https://i.ibb.co/Ld2FZzb/vercel.png" width="18"/> Deploy to Vercel](https://vercel.com/new/project?template=https://github.com/lissy93/dashy)
-- [<img src="https://i.ibb.co/xCHtzgh/render.png" width="18"/> Deploy to Render](https://render.com/deploy?repo=https://github.com/lissy93/dashy/tree/deploy_render)
+- [<img src="https://i.ibb.co/xCHtzgh/render.png" width="18"/> Deploy to Render](https://render.com/deploy?repo=https://github.com/lissy93/dashy)
 - [<img src="https://railway.app/brand/logo-light.png" width="18"/> Deploy to Railway](https://railway.app/template/MtdjAQ?referralCode=app)
 - [<img src="https://i.ibb.co/J7MGymY/googlecloud.png" width="18"/> Deploy to GCP](https://deploy.cloud.run/?git_repo=https://github.com/lissy93/dashy.git)
 - [<img src="https://i.ibb.co/HVWVYF7/docker.png" width="18"/> Deploy to PWD](https://labs.play-with-docker.com/?stack=https://raw.githubusercontent.com/Lissy93/dashy/master/docker-compose.yml)
@@ -235,7 +233,7 @@ The following icon types are supported:
 [simple-icons]: https://simpleicons.org/
 [material icons]: https://github.com/Templarian/MaterialDesign
 [selfh.st/icons]: https://selfh.st/icons
-[dashboard-icons]: https://github.com/WalkxCode/dashboard-icons
+[dashboard-icons]: https://github.com/homarr-labs/dashboard-icons
 
 
 <p align="center">
@@ -329,7 +327,7 @@ You can change the view from the UI, using the switch icon in the top-right corn
 
 > For full documentation on views and opening methods, see: [**Alternate Views**](./docs/alternate-views.md)
 
-There are several different ways you can launch apps. You can specify the default opening method for any given item under the `target` attribute or set a site-wide default under `appConfig.defaultOpeningMethod`. Right-click on an item to item for all options. The following options are supported:
+There are several different ways you can launch apps. You can specify the default opening method for any given item under the `target` attribute or set a site-wide default under `appConfig.defaultOpeningMethod`. Right-click on an item for all options. The following options are supported:
 - `sametab` - The app will be launched in the current tab
 - `newtab` - The app will be launched in a new tab (or use Ctrl + Click)
 - `modal` - Launch app in a resizable/ movable popup modal on the current page (or use Alt + Click)
@@ -502,12 +500,7 @@ The hardware requirements vary depending on where and how you are running Dashy.
 
 If you are using one of the 1-click cloud deployment methods, serving the app through a CDN or using a static hosting provider, then there are no specific requirements, as the built app is just a series of static JS files, and so is very light-weight.
 
-Dashy also wells run on low-powered ARM-based single board computers, such as a Raspberry Pi (tested on Pi 3)
-
-**Browser Support**
-![Chrome](https://raw.githubusercontent.com/alrra/browser-logos/master/src/chrome/chrome_48x48.png) | ![Firefox](https://raw.githubusercontent.com/alrra/browser-logos/master/src/firefox/firefox_48x48.png) | ![IE](https://raw.githubusercontent.com/alrra/browser-logos/master/src/edge/edge_48x48.png) | ![Opera](https://raw.githubusercontent.com/alrra/browser-logos/master/src/opera/opera_48x48.png) | ![Safari](https://raw.githubusercontent.com/alrra/browser-logos/master/src/safari/safari_48x48.png)
---- | --- | --- | --- | --- |
-Latest ✔ | Latest ✔ | 10+ ✔ | Latest ✔ | 6.1+ ❌ |
+Dashy also runs well on low-powered ARM-based single board computers, such as a Raspberry Pi (tested on Pi 3)
 
 **[⬆️ Back to Top](#dashy)**
 
@@ -570,7 +563,7 @@ Huge thanks to the sponsors helping to support Dashy's development!
 
 > For full development documentation, see: [**Developing**](./docs/developing.md)
 
-[![Open Project in VS Code](https://img.shields.io/badge/Open_in-VS_Code-863cfc?style=flat-square&logo=visualstudiocode)](https://open.vscode.dev/Lissy93/Dashy)
+[![Open Project in VS Code](https://img.shields.io/badge/Open_in-VS_Code-863cfc?style=flat-square&logo=visualstudiocode)](https://vscode.dev/github/Lissy93/Dashy)
 [![Open in GitPod](https://img.shields.io/badge/Open_in-GitPod-ffae33?style=flat-square&logo=gitpod)](https://gitpod.io/#github.com/lissy93/dashy.git)
 [![Open in GitHub Code Spaces](https://img.shields.io/badge/Open_in-Code%20Spaces-131313?style=flat-square&logo=github)](https://github.dev/Lissy93/dashy)
 
