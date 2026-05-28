@@ -45,6 +45,10 @@ Dashy uses a form of semantic versioning ([semver](https://semver.org/)), whereb
 
 <img width="500" src="https://pixelflare.cc/alicia/images/semver.png" />
 
+### Changelog
+You can view a list of recent changes at [dashy.to/updates](https://dashy.to/updates) or subscribe to the [`rss.xml`](https://dashy.to/rss.xml) feed.
+Likewise, on GitHub you can view all of our [Tags](https://github.com/lissy93/dashy/tags) and [Releases](https://github.com/lissy93/dashy/releases)
+
 ---
 
 ## Workflows
@@ -154,7 +158,6 @@ Mirrors the markdown content from [`/docs`](https://github.com/lissy93/dashy/tre
 | **Triggers** | Push to `docs/**` on master, schedule (weekly), manual dispatch |
 | **Inputs** | _None_ |
 | **Outputs** | Updated docs on the `WEBSITE/docs-site-source` branch |
-
 
 ---
 
