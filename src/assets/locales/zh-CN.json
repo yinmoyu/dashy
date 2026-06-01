@@ -7,14 +7,18 @@
   "home": {
     "no-results": "找不到结果",
     "no-data": "没有配置数据",
-    "no-items-section": "没有内容"
+    "no-items-section": "没有内容",
+    "session-expired-line1": "您的会话已过期",
+    "session-expired-line2": "请重新认证以访问您的仪表板",
+    "sign-in-again": "重新登录"
   },
   "search": {
     "search-label": "搜索",
     "search-placeholder": "输入以筛选",
     "clear-search-tooltip": "清空搜索",
     "enter-to-search-web": "点击回车搜索",
-    "enter-to-open-url": "按回车键打开网址"
+    "enter-to-open-url": "按回车键打开网址",
+    "enter-to-launch-first": "按回车键启动第一个匹配项"
   },
   "splash-screen": {
     "loading": "加载中"
@@ -48,6 +52,7 @@
     "error-no-user-configured": "没有启用验证，或者未配置用户",
     "error-go-home-button": "Go Home",
     "logged-in-guest": "以访客身份登录，正在跳转...",
+    "authenticated-redirecting": "已认证，正在跳转...",
     "error-guest-access": "不允许访客访问"
   },
   "app-info": {
