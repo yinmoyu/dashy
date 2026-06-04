@@ -1,9 +1,10 @@
-# CI checks to run when PR is opened
-name: 🚦 PR Check
+# CI checks to run when a PR is opened, or manually via workflow_dispatch
+name: 🚦 CI
 
 on:
   pull_request:
     branches: ['master', 'develop']
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -53,7 +54,7 @@ jobs:
     name: 🛡️ Lint
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.src == 'true'
+    if: needs.changes.outputs.src == 'true' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -74,7 +75,7 @@ jobs:
     name: 🦴 Typecheck
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.src == 'true'
+    if: needs.changes.outputs.src == 'true' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -108,13 +109,21 @@ jobs:
         run: yarn install --frozen-lockfile
 
       - name: Run Tests
-        run: yarn test
+        run: yarn test 2>&1 | tee test-report.txt
+
+      - name: Upload Test Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: test-report.txt
+          if-no-files-found: ignore
 
   locales:
     name: 🌐 Locale Check
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.locales == 'true'
+    if: needs.changes.outputs.locales == 'true' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -125,13 +134,21 @@ jobs:
           node-version: '20'
 
       - name: Check Locales
-        run: yarn validate-locales
+        run: yarn validate-locales 2>&1 | tee locale-report.txt
+
+      - name: Upload Locale Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: locale-report
+          path: locale-report.txt
+          if-no-files-found: ignore
 
   spellcheck:
     name: ✏️ Spellcheck
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.translations == 'true'
+    if: needs.changes.outputs.translations == 'true' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -188,7 +205,7 @@ jobs:
     name: 🔒 Dependency Audit
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.lockfile == 'true'
+    if: needs.changes.outputs.lockfile == 'true' && github.event_name == 'pull_request'
     permissions:
       contents: read
     steps:
@@ -222,7 +239,7 @@ jobs:
     name: 🛠️ Workflow Audit
     runs-on: ubuntu-latest
     needs: changes
-    if: needs.changes.outputs.workflows == 'true'
+    if: needs.changes.outputs.workflows == 'true' || github.event_name == 'workflow_dispatch'
     steps:
       - name: Checkout Code
         uses: actions/checkout@v6
@@ -238,3 +255,75 @@ jobs:
           inputs: .github/workflows/
           advanced-security: false
           annotations: true
+
+  # Renders markdown summary of all checks at the end
+  summary:
+    name: 📋 Summary
+    runs-on: ubuntu-latest
+    if: always()
+    continue-on-error: true
+    needs:
+      - lint
+      - typecheck
+      - test
+      - locales
+      - spellcheck
+      - build
+      - docker-smoke
+      - dependency-review
+      - secret-scan
+      - workflow-audit
+    steps:
+      - name: Download Reports
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          path: reports
+          merge-multiple: true
+
+      - name: Render Summary
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          label() {
+            case "$1" in
+              lint) echo "🛡️ Lint" ;;
+              typecheck) echo "🦴 Typecheck" ;;
+              test) echo "🧪 Test" ;;
+              locales) echo "🌐 Locale Check" ;;
+              spellcheck) echo "✏️ Spellcheck" ;;
+              build) echo "🏗️ Build" ;;
+              docker-smoke) echo "🐳 Docker Smoke" ;;
+              dependency-review) echo "🔒 Dependency Audit" ;;
+              secret-scan) echo "🔑 Secret Scan" ;;
+              workflow-audit) echo "🛠️ Workflow Audit" ;;
+              *) echo "$1" ;;
+            esac
+          }
+          status() {
+            case "$1" in
+              success) echo "✅ Passed" ;;
+              skipped) echo "⏭️ Skipped" ;;
+              cancelled) echo "🚫 Cancelled" ;;
+              failure) [ "$2" = docker-smoke ] && echo "⚠️ Warnings" || echo "❌ Failed" ;;
+              *) echo "❔ $1" ;;
+            esac
+          }
+          details() {
+            [ -f "$2" ] || return 0
+            printf '\n<details><summary>%s</summary>\n\n```\n' "$1" >> "$GITHUB_STEP_SUMMARY"
+            cat "$2" >> "$GITHUB_STEP_SUMMARY"
+            printf '\n```\n</details>\n' >> "$GITHUB_STEP_SUMMARY"
+          }
+          {
+            echo "## CI Summary"
+            echo ""
+            echo "| Check | Status |"
+            echo "|-------|--------|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for job in $(echo "$NEEDS" | jq -r 'keys[]'); do
+            result=$(echo "$NEEDS" | jq -r --arg j "$job" '.[$j].result')
+            echo "| $(label "$job") | $(status "$result" "$job") |" >> "$GITHUB_STEP_SUMMARY"
+          done
+          details "🧪 Test Report" reports/test-report.txt
+          details "🌐 Locale Report" reports/locale-report.txt
