@@ -55,13 +55,13 @@ const setReloadGuard = (on) => {
  */
 const recoverFromAuthProxy = async () => {
   try { if (localStorage.getItem(AUTH_PROXY_COMPAT_KEY) !== '1') return false; } catch { return false; }
-  if (!navigator.serviceWorker.controller) { setReloadGuard(false); return false; }
-  if (isReloadGuardSet()) return false;
   let res;
   try {
     res = await fetch(serviceEndpoints.getUser, { cache: 'no-store', redirect: 'manual' });
   } catch { return false; } // network error / offline - keep SW for offline use
-  if (res.type !== 'opaqueredirect') { setReloadGuard(false); return false; } // valid session - reset
+  if (res.type !== 'opaqueredirect') { setReloadGuard(false); return false; } // valid session - re-arm
+  if (!navigator.serviceWorker.controller) return false; // no cached SW blocking the redirect
+  if (isReloadGuardSet()) return false; // already reloaded once - avoid repeat on false positives
   setReloadGuard(true);
   statusMsg(SW_LABEL, 'Auth proxy redirect detected - unregistering SW and reloading.');
   await unregisterAll();
