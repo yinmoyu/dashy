@@ -2,15 +2,15 @@
 #
 # Triggered by:
 # - On git tag push, publishes to :X.Y.Z, :X.Y, and :latest
-# - On manual dispatch from master, rebuilds and updates :latest
+# - On manual trigger, rebuilds and updates :latest or tag if specified
 # - On weekly cron, rebuilds :latest from master for upstream patches
 #
 # The workflow will:
 # - Builds multi-arch (amd64, arm64, armv7) in parallel on native runners
-# - Trivy scans + reports security issues, and fails on CRITICAL CVEs
+# - Trivy scans + reports security issues, and fails cron on CRITICAL CVEs
 # - Publishes to GHCR, and to Docker Hub if creds are configured
 # - Attests both the build provenance and SBOM and publishes to GHCR
-# - Uploads digest, SBOM and outputs as artifact, and shows MD summary
+# - Uploads per-arch digests as artifacts, and writes a pretty job summary
 
 name: 🐳 Docker
 
@@ -31,7 +31,7 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: read
+  contents: read  # least-privilege default; jobs elevate as needed
 
 env:
   DH_IMAGE: ${{ vars.DOCKER_REPO || 'lissy93/dashy' }}
@@ -42,9 +42,9 @@ jobs:
     name: 🔨 Build (${{ matrix.arch }})
     timeout-minutes: 30
     permissions:
-      contents: read
-      packages: write
-      security-events: write
+      contents: read          # checkout
+      packages: write         # push image by digest to GHCR
+      security-events: write  # upload Trivy SARIF to code scanning
     env:
       DOCKER_BUILD_SUMMARY: "false"
       DOCKER_BUILD_RECORD_UPLOAD: "false"
@@ -84,6 +84,7 @@ jobs:
             v="latest"
           fi
           echo "value=$v" >> "$GITHUB_OUTPUT"
+          echo "revision=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: 🔧 Set up QEMU
         if: matrix.arch == 'armv7'
@@ -118,7 +119,7 @@ jobs:
           provenance: false
           build-args: |
             VERSION=${{ steps.version.outputs.value }}
-            REVISION=${{ github.sha }}
+            REVISION=${{ steps.version.outputs.revision }}
             CREATED=${{ steps.timestamp.outputs.iso }}
 
       - name: 🛡️ Trivy vulnerability scan
@@ -174,7 +175,7 @@ jobs:
           provenance: false
           build-args: |
             VERSION=${{ steps.version.outputs.value }}
-            REVISION=${{ github.sha }}
+            REVISION=${{ steps.version.outputs.revision }}
             CREATED=${{ steps.timestamp.outputs.iso }}
 
       - name: 🧬 Write digest
@@ -200,10 +201,10 @@ jobs:
     timeout-minutes: 30
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
-      id-token: write
-      attestations: write
+      contents: read       # least-privilege baseline
+      packages: write      # push manifest + attestations to GHCR
+      id-token: write      # OIDC token for keyless attestation signing
+      attestations: write  # write SBOM + provenance attestations
     env:
       HAS_DH: ${{ vars.DOCKER_USERNAME != '' && secrets.DOCKER_PASSWORD != '' }}
       SEMVER_VALUE: ${{ inputs.tag || github.ref_name }}
