@@ -71,6 +71,27 @@ describe('CustomApi widget', () => {
     expect(wrapper.find('.additional').classes()).toContain('color-success');
   });
 
+  describe('mergedHeaders content-type', () => {
+    it('defaults to application/json for a body-bearing method', () => {
+      wrapper = mountWidget({ url: 'https://example.com', method: 'POST', requestBody: { a: 1 } });
+      expect(wrapper.vm.mergedHeaders['Content-Type']).toBe('application/json');
+    });
+    it('does not add a content-type for GET', () => {
+      wrapper = mountWidget({ url: 'https://example.com', requestBody: { a: 1 } });
+      const keys = Object.keys(wrapper.vm.mergedHeaders).map((k) => k.toLowerCase());
+      expect(keys).not.toContain('content-type');
+    });
+    it('respects a user-provided content-type', () => {
+      wrapper = mountWidget({
+        url: 'https://example.com',
+        method: 'POST',
+        requestBody: '<xml/>',
+        headers: { 'Content-Type': 'application/xml' },
+      });
+      expect(wrapper.vm.mergedHeaders['Content-Type']).toBe('application/xml');
+    });
+  });
+
   describe('updateInterval', () => {
     it('defaults to 10s', () => {
       wrapper = mountWidget({ url: 'https://example.com' });

@@ -3310,7 +3310,7 @@ This was very much inspired by, and is broadly compatible with [Homepage's custo
 **`password`** | `string` | _Optional_ | Password for HTTP basic auth
 **`method`** | `string` | _Optional_ | HTTP method, e.g. `GET` (default) or `POST`
 **`headers`** | `object` | _Optional_ | An object of custom request headers
-**`requestBody`** | `string` or `object` | _Optional_ | Request body for non-GET methods. Prefer an object (sent as JSON) — a raw string is JSON-encoded again, so don't pre-stringify
+**`requestBody`** | `string` or `object` | _Optional_ | Request body for non-GET methods. Prefer an object. A raw string is JSON-encoded again, so don't pre-stringify
 **`display`** | `string` | _Optional_ | Layout for the fields: `block` (default, label and value on one row) or `list` (value stacked under the label)
 **`mappings`** | `array` | _Optional_ | The fields to display from the response (see below). If omitted, the raw response root is shown
 
@@ -3326,7 +3326,7 @@ Each item in `mappings` accepts:
 **`timeStyle`** | `string` | _Optional_ | For `date` format. One of `full`, `long`, `medium`, `short`
 **`style`** | `string` | _Optional_ | For `relativeDate` format. One of `long` (default), `short`, `narrow`
 **`numeric`** | `string` | _Optional_ | For `relativeDate` format. One of `always` (default) or `auto`
-**`additionalField`** | `object` | _Optional_ | A secondary value shown next to the main one. Accepts `field`, `format` (and its options), plus `color` — one of `theme`, `adaptive` (action colour from the value's sign: positive green, negative red), `black` or `white`
+**`additionalField`** | `object` | _Optional_ | A secondary value shown next to the main one. Accepts `field`, `format` (and its options), plus `color` - one of `theme`, `adaptive` (action colour from the value's sign: positive green, negative red), `black` or `white`
 
 Notes:
 - **`percent`** treats the value as an already-computed percentage, so `42` is shown as `42%`

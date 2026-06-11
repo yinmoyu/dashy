@@ -45,7 +45,12 @@ export default {
       Object.keys(userHeaders).forEach((key) => {
         resolved[key] = this.parseAsEnvVar(userHeaders[key]);
       });
-      return { ...this.authHeaders, ...resolved };
+      const headers = { ...this.authHeaders, ...resolved };
+      // Default a JSON content-type for body-bearing methods, unless the user set one
+      const hasBody = this.options.requestBody != null && this.method !== 'GET' && this.method !== 'HEAD';
+      const hasContentType = Object.keys(headers).some((k) => k.toLowerCase() === 'content-type');
+      if (hasBody && !hasContentType) headers['Content-Type'] = 'application/json';
+      return headers;
     },
     method() {
       return (this.options.method || 'GET').toUpperCase();
