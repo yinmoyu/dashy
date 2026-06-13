@@ -78,6 +78,8 @@ class OidcAuth {
     });
   }
 
+  /* Returns true when a same-page reload is scheduled, signalling the caller
+   * to skip mounting the throwaway frame the reload would immediately discard. */
   async login() {
     const hadValidToken = Boolean(getApiAuthHeader());
     const url = new URL(window.location.href);
@@ -104,7 +106,7 @@ class OidcAuth {
       const returnTo = safeReturnTo(callbackUser.state);
       toast(i18n.global.t('login.authenticated-redirecting'), { type: 'success' });
       setTimeout(() => window.location.replace(returnTo), 600);
-      return;
+      return true;
     }
 
     const user = await this.userManager.getUser();
@@ -127,7 +129,9 @@ class OidcAuth {
     if (!hadValidToken && getApiAuthHeader()) {
       toast(i18n.global.t('login.authenticated-redirecting'), { type: 'success' });
       setTimeout(() => window.location.reload(), 500);
+      return true;
     }
+    return false;
   }
 
   /* Redirect to the IdP for interactive sign-in
