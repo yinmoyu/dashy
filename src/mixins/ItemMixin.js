@@ -25,6 +25,9 @@ export default {
       contextMenuOpen: false,
       intervalId: undefined, // status-check setInterval() id
       pingIntervalId: undefined, // ping-check setInterval() id
+      // Local URL reachability: undefined = not yet probed, true/false = last result
+      localUrlReachable: undefined,
+      localUrlIntervalId: undefined, // local-url re-check setInterval() id
       contextPos: {
         posX: undefined,
         posY: undefined,
@@ -107,6 +110,32 @@ export default {
     accumulatedTarget() {
       return this.item.target || this.appConfig.defaultOpeningMethod || defaultOpeningMethod;
     },
+    /* True if a non-empty alternative local URL has been configured for this item */
+    hasLocalUrl() {
+      return !!(this.item.localUrl && typeof this.item.localUrl === 'string'
+        && this.item.localUrl.trim());
+    },
+    /* Timeout (ms) for the local URL reachability probe, clamped to a sane range */
+    localUrlProbeTimeout() {
+      let timeout = this.item.localUrlTimeout;
+      if (typeof timeout !== 'number' || Number.isNaN(timeout)) timeout = 1500;
+      if (timeout < 300) timeout = 300;
+      if (timeout > 5000) timeout = 5000;
+      return timeout;
+    },
+    /* Interval (seconds) between background re-checks; 0 = only on load + tab focus */
+    localUrlCheckInterval() {
+      let interval = this.item.localUrlCheckInterval;
+      if (typeof interval !== 'number' || Number.isNaN(interval) || interval < 0) return 0;
+      if (interval > 300) interval = 300;
+      return Math.floor(interval);
+    },
+    /* The URL actually used when the item is opened. Prefers the local URL only once it
+       has been confirmed reachable from the browser, otherwise uses the regular URL. */
+    effectiveUrl() {
+      if (this.hasLocalUrl && this.localUrlReachable === true) return this.item.localUrl;
+      return this.url || this.item.url;
+    },
     /* Convert config target value, into HTML anchor target attribute */
     anchorTarget() {
       if (this.isEditMode) return '_self';
@@ -122,7 +151,7 @@ export default {
     /* Get href for anchor, if not in edit mode, or opening in modal/ workspace */
     hyperLinkHref() {
       const nothing = '#';
-      const url = this.url || this.item.url || nothing;
+      const url = this.effectiveUrl || nothing;
       if (this.isEditMode) return nothing;
       const noAnchorNeeded = ['modal', 'workspace', 'clipboard', 'newwindow'];
       return noAnchorNeeded.includes(this.accumulatedTarget) ? nothing : url;
@@ -210,9 +239,47 @@ export default {
           });
       }
     },
+    /* Probes the configured local URL from the browser to decide if it's reachable.
+       Runs in the background (never blocks a click): the result feeds `effectiveUrl`,
+       which is already bound to the anchor's href by the time the user clicks.
+       Uses a no-cors fetch so cross-origin LAN services don't trip CORS — we only
+       care whether the request settles (reachable) or aborts/errors (unreachable). */
+    probeLocalUrl() {
+      if (!this.hasLocalUrl) return;
+      const target = this.item.localUrl.trim();
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), this.localUrlProbeTimeout);
+      fetch(target, {
+        mode: 'no-cors',
+        cache: 'no-store',
+        signal: controller.signal,
+      })
+        .then(() => { this.localUrlReachable = true; })
+        .catch(() => { this.localUrlReachable = false; })
+        .finally(() => clearTimeout(timer));
+    },
+    /* Starts local-URL probing: once now, on tab re-focus, and optionally on an interval */
+    startLocalUrlChecks() {
+      if (!this.hasLocalUrl) return;
+      this.probeLocalUrl();
+      if (this.localUrlCheckInterval > 0) {
+        this.localUrlIntervalId = setInterval(this.probeLocalUrl, this.localUrlCheckInterval * 1000);
+      }
+      // Re-probe when the tab becomes visible again (e.g. user switched networks)
+      document.addEventListener('visibilitychange', this.onVisibilityProbe);
+    },
+    /* Re-probe when the page regains visibility, so a network change is picked up */
+    onVisibilityProbe() {
+      if (document.visibilityState === 'visible') this.probeLocalUrl();
+    },
+    /* Tears down local-URL probing timers and listeners */
+    stopLocalUrlChecks() {
+      if (this.localUrlIntervalId) clearInterval(this.localUrlIntervalId);
+      document.removeEventListener('visibilitychange', this.onVisibilityProbe);
+    },
     /* Called when an item is clicked, manages the opening of modal & resets the search field */
     itemClicked(e) {
-      const url = this.url || this.item.url;
+      const url = this.effectiveUrl;
       if (this.isEditMode) {
         // If in edit mode, open settings, and don't launch app
         e.preventDefault();
@@ -247,7 +314,7 @@ export default {
     },
     /* Open item, using specified method */
     launchItem(method, link) {
-      const url = link || this.item.url;
+      const url = link || this.effectiveUrl;
       this.contextMenuOpen = false;
       switch (method) {
         case 'newtab':

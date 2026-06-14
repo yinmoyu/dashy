@@ -56,6 +56,15 @@ export default {
     return {};
   },
   methods: {},
+  mounted() {
+    // If an alternative local URL is set, probe its reachability in the background
+    if (this.hasLocalUrl) {
+      this.startLocalUrlChecks();
+    }
+  },
+  beforeUnmount() {
+    this.stopLocalUrlChecks();
+  },
 };
 </script>
 
