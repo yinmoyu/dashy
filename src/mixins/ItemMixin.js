@@ -25,9 +25,9 @@ export default {
       contextMenuOpen: false,
       intervalId: undefined, // status-check setInterval() id
       pingIntervalId: undefined, // ping-check setInterval() id
-      // Local URL reachability: undefined = not yet probed, true/false = last result
-      localUrlReachable: undefined,
+      localUrlReachable: undefined, // Locally reachable? unset if not yet probed, else true/false
       localUrlIntervalId: undefined, // local-url re-check setInterval() id
+      localUrlController: undefined, // AbortController for the in-flight probe
       contextPos: {
         posX: undefined,
         posY: undefined,
@@ -239,15 +239,13 @@ export default {
           });
       }
     },
-    /* Probes the configured local URL from the browser to decide if it's reachable.
-       Runs in the background (never blocks a click): the result feeds `effectiveUrl`,
-       which is already bound to the anchor's href by the time the user clicks.
-       Uses a no-cors fetch so cross-origin LAN services don't trip CORS — we only
-       care whether the request settles (reachable) or aborts/errors (unreachable). */
+    /* Probes the configured local URL from the browser to decide if it's reachable */
     probeLocalUrl() {
       if (!this.hasLocalUrl) return;
       const target = this.item.localUrl.trim();
+      if (this.localUrlController) this.localUrlController.abort();
       const controller = new AbortController();
+      this.localUrlController = controller;
       const timer = setTimeout(() => controller.abort(), this.localUrlProbeTimeout);
       fetch(target, {
         mode: 'no-cors',
@@ -256,7 +254,10 @@ export default {
       })
         .then(() => { this.localUrlReachable = true; })
         .catch(() => { this.localUrlReachable = false; })
-        .finally(() => clearTimeout(timer));
+        .finally(() => {
+          clearTimeout(timer);
+          if (this.localUrlController === controller) this.localUrlController = undefined;
+        });
     },
     /* Starts local-URL probing: once now, on tab re-focus, and optionally on an interval */
     startLocalUrlChecks() {
@@ -272,9 +273,10 @@ export default {
     onVisibilityProbe() {
       if (document.visibilityState === 'visible') this.probeLocalUrl();
     },
-    /* Tears down local-URL probing timers and listeners */
+    /* Tears down local-URL probing timers, listeners and any in-flight probe */
     stopLocalUrlChecks() {
       if (this.localUrlIntervalId) clearInterval(this.localUrlIntervalId);
+      if (this.localUrlController) this.localUrlController.abort();
       document.removeEventListener('visibilitychange', this.onVisibilityProbe);
     },
     /* Called when an item is clicked, manages the opening of modal & resets the search field */
@@ -386,5 +388,13 @@ export default {
         localStorage.setItem(localStorageKeys.LAST_USED, JSON.stringify(lastUsed));
       } catch { /* ignore corrupt localStorage */ }
     },
+  },
+  mounted() {
+    // If an alternative local URL is set, probe its reachability in the background
+    if (this.hasLocalUrl) this.startLocalUrlChecks();
+  },
+  beforeUnmount() {
+    // Stop local-URL probing timers, listeners and any in-flight probe
+    this.stopLocalUrlChecks();
   },
 };

@@ -218,17 +218,11 @@ export default {
         this.intervalId = setInterval(this.checkWebsiteStatus, this.statusCheckInterval * 1000);
       }
     }
-    // If an alternative local URL is set, probe its reachability in the background
-    if (this.hasLocalUrl) {
-      this.startLocalUrlChecks();
-    }
   },
   beforeUnmount() {
     // Stop periodic ping-check and status-check when item is destroyed (e.g. navigating in multi-page setup)
     if (this.pingIntervalId) clearInterval(this.pingIntervalId);
     if (this.intervalId) clearInterval(this.intervalId);
-    // Stop local-URL probing timers and listeners
-    this.stopLocalUrlChecks();
   },
 };
 </script>
