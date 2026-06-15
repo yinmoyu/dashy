@@ -18,7 +18,7 @@ Or with `docker run`, pass `-e ENABLE_API=true`. While disabled, all `/api/*` re
 
 ## Authentication
 
-The API uses Dashy's existing [server-side authentication](/docs/authentication.md). Read endpoints require any authenticated user, and write endpoints require an admin. If no auth is configured, the API is open — the same as Dashy's other endpoints.
+By default, the API uses Dashy's existing [server-side authentication](/docs/authentication.md). Read endpoints require any authenticated user, and write endpoints require an admin. If no auth is configured, the API is open — the same as Dashy's other endpoints.
 
 ```bash
 # With HTTP Basic Auth (ENABLE_HTTP_AUTH or BASIC_AUTH_USERNAME / BASIC_AUTH_PASSWORD)
@@ -27,6 +27,23 @@ curl -u alice:hunter2 http://localhost:8080/api/config
 # With OIDC / Keycloak, pass your ID token
 curl -H 'Authorization: Bearer <id-token>' http://localhost:8080/api/config
 ```
+
+### API token
+
+If you have no auth configured, or would prefer a dedicated credential for the API, set the `API_TOKEN` environmental variable and send it as a bearer token. A valid token grants full (admin) access, and works alongside any other configured auth method.
+
+```yaml
+environment:
+  - ENABLE_API=true
+  - API_TOKEN=your-long-random-secret
+```
+
+```bash
+curl -H 'Authorization: Bearer your-long-random-secret' http://localhost:8080/api/config
+```
+
+> [!NOTE]
+> Setting `API_TOKEN` also secures the API on deployments that have no other auth — anonymous requests are then rejected. Use a long, random value (e.g. `openssl rand -hex 32`) and only send it over HTTPS. The token applies to the API only, not Dashy's other endpoints.
 
 ## Endpoints
 
