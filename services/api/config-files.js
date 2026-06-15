@@ -1,7 +1,6 @@
 /**
- * File-system + YAML helpers for the REST API.
- * Reads config files from USER_DATA_DIR, and reuses save-config.js for
- * writes, so backups, size limits and filename validation stay in one place
+ * File-system + YAML helpers for the REST API
+ * Reads config files from USER_DATA_DIR, and reuses save-config.js for writes
  */
 const fsPromises = require('fs').promises;
 const path = require('path');

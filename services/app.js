@@ -301,9 +301,10 @@ const app = express()
     }
   }))
   // REST API for reading / writing config files (no-op 404 unless ENABLE_API=true)
-  .use(ENDPOINTS.api, apiEnabledGate, protectConfig, createApiRouter({
-    requireAuth,
+  .use(ENDPOINTS.api, apiEnabledGate, createApiRouter({
+    protectConfig,
     requireAdmin,
+    authIsConfigured,
     onConfigSaved: (filename, newConf) => { if (filename === 'conf.yml') config = newConf; },
   }))
   .use(ENDPOINTS.api, apiErrorHandler)

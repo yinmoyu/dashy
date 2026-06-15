@@ -1,8 +1,9 @@
 /**
- * Opt-in REST API for reading + writing config files (see docs/api.md).
- * Disabled unless ENABLE_API=true. Mounted at /api by app.js, which passes
- * in its auth middleware: reads require any user, writes require an admin
+ * Opt-in REST API for reading + writing config files (see docs/api.md)
+ * Disabled unless ENABLE_API=true
+ * Uses the same auth as rest of Dashy or API_TOKEN as bearer token
  */
+const crypto = require('crypto');
 const express = require('express');
 
 const {
@@ -12,8 +13,14 @@ const {
 /* The editable top-level config keys (matches ConfigSchema.json) */
 const TOP_LEVEL_KEYS = ['pageInfo', 'appConfig', 'sections', 'pages'];
 
-/* Renders errors raised before route handlers (e.g. malformed JSON or
-   oversized bodies from express.json) as JSON, instead of Express's HTML */
+/* Check specified token matches allowed token */
+const tokensMatch = (a, b) => {
+  const x = Buffer.from(String(a));
+  const y = Buffer.from(String(b));
+  return x.length === y.length && crypto.timingSafeEqual(x, y);
+};
+
+/* Renders errors raised before route handlers as jason */
 const apiErrorHandler = (err, req, res, next) => {
   if (res.headersSent) return next(err);
   return res.status(err.status || 400).json({ success: false, message: err.message });
@@ -66,8 +73,43 @@ const findItem = (section, iid) => {
   return { items, index, item: items[index] };
 };
 
-const createApiRouter = ({ requireAuth, requireAdmin, onConfigSaved }) => {
+const createApiRouter = ({
+  protectConfig, authIsConfigured, onConfigSaved, requireAdmin: delegateAdmin,
+}) => {
   const router = express.Router();
+
+  /* The API is gated when Dashy auth, or an API token, is configured */
+  const secured = () => authIsConfigured || Boolean(process.env.API_TOKEN);
+
+  /* Either authenticate with API_TOKEN bearer if set, or defer to user's auth */
+  const apiAuth = (req, res, next) => {
+    const token = process.env.API_TOKEN;
+    if (token) {
+      const header = req.headers.authorization || '';
+      const provided = header.startsWith('Bearer ') ? header.slice(7) : '';
+      if (provided && tokensMatch(provided, token)) {
+        req.auth = { user: 'api-token', isAdmin: true };
+        return next();
+      }
+    }
+    return protectConfig(req, res, next);
+  };
+
+  /* Require any authenticated identity */
+  const requireAuth = (req, res, next) => {
+    if (!secured() || req.auth) return next();
+    return res.status(401).json({ success: false, message: 'Unauthorized' });
+  };
+
+  /* Require an admin identity, delegating the role check to Dashy's auth */
+  const requireAdmin = (req, res, next) => {
+    if (!secured()) return next();
+    if (req.auth?.isAdmin === true) return next();
+    if (!req.auth) return res.status(401).json({ success: false, message: 'Unauthorized' });
+    return delegateAdmin(req, res, next);
+  };
+
+  router.use(apiAuth);
 
   /* Wraps an async handler, rendering thrown ApiErrors as JSON */
   const route = (handler) => async (req, res) => {
@@ -78,8 +120,10 @@ const createApiRouter = ({ requireAuth, requireAdmin, onConfigSaved }) => {
     }
   };
 
-  /* Read-modify-write handler: applies mutate() to the parsed config, writes
-     it back, and responds with the save message + anything mutate returned */
+  /* Read-modify-write handler
+   * Applies mutate() to the parsed config, writes it back
+   * Responds with the save message + anything mutate returned
+   */
   const update = (mutate, status = 200) => route(async (req, res) => {
     const config = await readConfig(req.params.filename);
     const result = mutate(req, config);
