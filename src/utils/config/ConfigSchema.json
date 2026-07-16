@@ -878,12 +878,16 @@
                 "title": "Sort By",
                 "type": "string",
                 "enum": [
-                  "default",
-                  "most-used",
-                  "last-used",
-                  "alphabetical",
-                  "reverse-alphabetical",
-                  "random"
+                  "Default",
+                  "Most-used",
+                  "Last-used",
+                  "Alphabetical",
+                  "Alphabetical reverse",
+                  "Provider",
+                  "Provider reverse",
+                  "Item ID",
+                  "Item ID reverse",
+                  "Random"
                 ],
                 "default": "default",
                 "description": "How to sort items within the section. By default items are displayed in the order in which they are listed in within the config"
