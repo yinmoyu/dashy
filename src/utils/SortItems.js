@@ -10,6 +10,15 @@ const byTitle = (items) => [...items].sort(
   (a, b) => ((a.title || '').toLowerCase() > (b.title || '').toLowerCase() ? 1 : -1),
 );
 
+const byProvider = (items) => [...items].sort(
+  (a, b) => ((a.provider || '').toLowerCase() > (b.provider || '').toLowerCase() ? 1 : -1),
+);
+
+const byID = (items) => [...items].sort(
+  (a, b) => ((a.id || '').toLowerCase() > (b.id || '').toLowerCase() ? 1 : -1),
+);
+
+
 const byUsage = (items, key) => {
   const counts = readUsage(key);
   const get = (item) => counts[item.id] || 0;
@@ -25,12 +34,16 @@ const shuffled = (items) => items
 export default function sortItems(items, order, sectionTitle = '') {
   const list = Array.isArray(items) ? items.slice() : [];
   const ord = order || defaultSortOrder;
-  if (ord === 'default') return list;
-  if (ord === 'alphabetical') return byTitle(list);
-  if (ord === 'reverse-alphabetical') return byTitle(list).reverse();
-  if (ord === 'most-used') return byUsage(list, localStorageKeys.MOST_USED);
-  if (ord === 'last-used') return byUsage(list, localStorageKeys.LAST_USED);
-  if (ord === 'random') return shuffled(list);
+  if (ord === 'Default') return list;
+  if (ord === 'Alphabetical') return byTitle(list);
+  if (ord === 'Alphabetical reverse') return byTitle(list).reverse();
+  if (ord === 'Most-used') return byUsage(list, localStorageKeys.MOST_USED);
+  if (ord === 'Last-used') return byUsage(list, localStorageKeys.LAST_USED);
+  if (ord === 'Provider') return byProvider(list);
+  if (ord === 'Provider reverse') return byProvider(list).reverse();
+  if (ord === 'Item ID') return byID(list);
+  if (ord === 'Item ID reverse') return byID(list).reverse();
+  if (ord === 'Random') return shuffled(list);
   ErrorHandler(`Unknown Sort order '${ord}'${sectionTitle ? ` under '${sectionTitle}'` : ''}`);
   return list;
 }
