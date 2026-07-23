@@ -55,54 +55,78 @@
                 "default": false,
                 "description": "If set to true, page will be visible for logged in users, but not for guests"
               },
+              "showForGroups": {
+                "title": "Show for Groups",
+                "type": "array",
+                "description": "Page will be hidden from all users except those with one or more of these SSO groups",
+                "items": {
+                  "type": "string",
+                  "description": "Name of the group that will be able to view this page"
+                }
+              },
+              "hideForGroups": {
+                "title": "Hide for Groups",
+                "type": "array",
+                "description": "Page will be hidden from users with any of these SSO groups",
+                "items": {
+                  "type": "string",
+                  "description": "Name of the group that will not be able to view this page"
+                }
+              },
+              "showForRoles": {
+                "title": "Show for Roles",
+                "type": "array",
+                "description": "Page will be hidden from all users except those with one or more of these SSO roles",
+                "items": {
+                  "type": "string",
+                  "description": "Name of the role that will be able to view this page"
+                }
+              },
+              "hideForRoles": {
+                "title": "Hide for Roles",
+                "type": "array",
+                "description": "Page will be hidden from users with any of these SSO roles",
+                "items": {
+                  "type": "string",
+                  "description": "Name of the role that will not be able to view this page"
+                }
+              },
               "showForKeycloakUsers": {
-                "title": "Show for select Keycloak groups or roles",
+                "title": "Show for Groups/Roles (legacy)",
                 "type": "object",
-                "description": "Configure the Keycloak groups or roles that will have access to this page",
+                "description": "Legacy form of showForGroups and showForRoles",
                 "additionalProperties": false,
                 "properties": {
                   "groups": {
-                    "title": "Show for Groups",
                     "type": "array",
-                    "description": "Page will be hidden from all users except those with one or more of these groups",
                     "items": {
-                      "type": "string",
-                      "description": "Name of the group that will be able to view this page"
+                      "type": "string"
                     }
                   },
                   "roles": {
-                    "title": "Show for Roles",
                     "type": "array",
-                    "description": "Page will be hidden from all users except those with one or more of these roles",
                     "items": {
-                      "type": "string",
-                      "description": "Name of the role that will be able to view this page"
+                      "type": "string"
                     }
                   }
                 }
               },
               "hideForKeycloakUsers": {
-                "title": "Hide for select Keycloak groups or roles",
+                "title": "Hide for Groups/Roles (legacy)",
                 "type": "object",
-                "description": "Configure the Keycloak groups or roles that will not have access to this page",
+                "description": "Legacy form of hideForGroups and hideForRoles",
                 "additionalProperties": false,
                 "properties": {
                   "groups": {
-                    "title": "Hide for Groups",
                     "type": "array",
-                    "description": "Page will be hidden from users with any of these groups",
                     "items": {
-                      "type": "string",
-                      "description": "name of the group that will not be able to view this page"
+                      "type": "string"
                     }
                   },
                   "roles": {
-                    "title": "Hide for Roles",
                     "type": "array",
-                    "description": "Page will be hidden from users with any of roles",
                     "items": {
-                      "type": "string",
-                      "description": "name of the role that will not be able to view this page"
+                      "type": "string"
                     }
                   }
                 }
@@ -573,6 +597,11 @@
               "default": false,
               "description": "If set to true, an unauthenticated user will be able to have read-only access to dashboard, without needing to login. Requires auth to be configured."
             },
+            "logoutRedirectUrl": {
+              "title": "Logout Redirect URL",
+              "type": "string",
+              "description": "If set, the logout button will redirect here after logging out. Useful with header auth / to end auth proxy session"
+            },
             "users": {
               "title": "Users",
               "type": "array",
@@ -667,6 +696,12 @@
                   "type": "array",
                   "items": { "type": "string" },
                   "description": "List of issuer URLs to accept tokens from, overriding the issuer in the discovery document. Only needed for multi-tenant providers where the token issuer differs from the configured endpoint"
+                },
+                "disableServerSideCheck": {
+                  "title": "Disable Server-Side Check",
+                  "type": "boolean",
+                  "default": false,
+                  "description": "If set to true, the server skips token verification and endpoint protection, making OIDC client-side only. Not recommended"
                 }
               }
             },
@@ -974,54 +1009,78 @@
                 "default": false,
                 "description": "If set to true, section will be visible for logged in users, but not for guests"
               },
+              "showForGroups": {
+                "title": "Show for Groups",
+                "type": "array",
+                "description": "Section will be hidden from all users except those with one or more of these SSO groups",
+                "items": {
+                  "type": "string",
+                  "description": "Name of the group that will be able to view this section"
+                }
+              },
+              "hideForGroups": {
+                "title": "Hide for Groups",
+                "type": "array",
+                "description": "Section will be hidden from users with any of these SSO groups",
+                "items": {
+                  "type": "string",
+                  "description": "Name of the group that will not be able to view this section"
+                }
+              },
+              "showForRoles": {
+                "title": "Show for Roles",
+                "type": "array",
+                "description": "Section will be hidden from all users except those with one or more of these SSO roles",
+                "items": {
+                  "type": "string",
+                  "description": "Name of the role that will be able to view this section"
+                }
+              },
+              "hideForRoles": {
+                "title": "Hide for Roles",
+                "type": "array",
+                "description": "Section will be hidden from users with any of these SSO roles",
+                "items": {
+                  "type": "string",
+                  "description": "Name of the role that will not be able to view this section"
+                }
+              },
               "showForKeycloakUsers": {
-                "title": "Show for select Keycloak groups or roles",
+                "title": "Show for Groups/Roles (legacy)",
                 "type": "object",
-                "description": "Configure the Keycloak groups or roles that will have access to this section",
+                "description": "Legacy form of showForGroups and showForRoles",
                 "additionalProperties": false,
                 "properties": {
                   "groups": {
-                    "title": "Show for Groups",
                     "type": "array",
-                    "description": "Section will be hidden from all users except those with one or more of these groups",
                     "items": {
-                      "type": "string",
-                      "description": "Name of the group that will be able to view this section"
+                      "type": "string"
                     }
                   },
                   "roles": {
-                    "title": "Show for Roles",
                     "type": "array",
-                    "description": "Section will be hidden from all users except those with one or more of these roles",
                     "items": {
-                      "type": "string",
-                      "description": "Name of the role that will be able to view this section"
+                      "type": "string"
                     }
                   }
                 }
               },
               "hideForKeycloakUsers": {
-                "title": "Hide for select Keycloak groups or roles",
+                "title": "Hide for Groups/Roles (legacy)",
                 "type": "object",
-                "description": "Configure the Keycloak groups or roles that will not have access to this section",
+                "description": "Legacy form of hideForGroups and hideForRoles",
                 "additionalProperties": false,
                 "properties": {
                   "groups": {
-                    "title": "Hide for Groups",
                     "type": "array",
-                    "description": "Section will be hidden from users with any of these groups",
                     "items": {
-                      "type": "string",
-                      "description": "name of the group that will not be able to view this section"
+                      "type": "string"
                     }
                   },
                   "roles": {
-                    "title": "Hide for Roles",
                     "type": "array",
-                    "description": "Section will be hidden from users with any of roles",
                     "items": {
-                      "type": "string",
-                      "description": "name of the role that will not be able to view this section"
+                      "type": "string"
                     }
                   }
                 }
@@ -1114,54 +1173,78 @@
                       "default": false,
                       "description": "If set to true, item will be visible for logged in users, but not for guests"
                     },
+                    "showForGroups": {
+                      "title": "Show for Groups",
+                      "type": "array",
+                      "description": "Item will be hidden from all users except those with one or more of these SSO groups",
+                      "items": {
+                        "type": "string",
+                        "description": "Name of the group that will be able to view this item"
+                      }
+                    },
+                    "hideForGroups": {
+                      "title": "Hide for Groups",
+                      "type": "array",
+                      "description": "Item will be hidden from users with any of these SSO groups",
+                      "items": {
+                        "type": "string",
+                        "description": "Name of the group that will not be able to view this item"
+                      }
+                    },
+                    "showForRoles": {
+                      "title": "Show for Roles",
+                      "type": "array",
+                      "description": "Item will be hidden from all users except those with one or more of these SSO roles",
+                      "items": {
+                        "type": "string",
+                        "description": "Name of the role that will be able to view this item"
+                      }
+                    },
+                    "hideForRoles": {
+                      "title": "Hide for Roles",
+                      "type": "array",
+                      "description": "Item will be hidden from users with any of these SSO roles",
+                      "items": {
+                        "type": "string",
+                        "description": "Name of the role that will not be able to view this item"
+                      }
+                    },
                     "showForKeycloakUsers": {
-                      "title": "Show for select Keycloak groups or roles",
+                      "title": "Show for Groups/Roles (legacy)",
                       "type": "object",
-                      "description": "Configure the Keycloak groups or roles that will have access to this item",
+                      "description": "Legacy form of showForGroups and showForRoles",
                       "additionalProperties": false,
                       "properties": {
                         "groups": {
-                          "title": "Show for Groups",
                           "type": "array",
-                          "description": "Item will be hidden from all users except those with one or more of these groups",
                           "items": {
-                            "type": "string",
-                            "description": "Name of the group that will be able to view this item"
+                            "type": "string"
                           }
                         },
                         "roles": {
-                          "title": "Show for Roles",
                           "type": "array",
-                          "description": "Item will be hidden from all users except those with one or more of these roles",
                           "items": {
-                            "type": "string",
-                            "description": "Name of the role that will be able to view this item"
+                            "type": "string"
                           }
                         }
                       }
                     },
                     "hideForKeycloakUsers": {
-                      "title": "Hide for select Keycloak groups or roles",
+                      "title": "Hide for Groups/Roles (legacy)",
                       "type": "object",
-                      "description": "Configure the Keycloak groups or roles that will not have access to this item",
+                      "description": "Legacy form of hideForGroups and hideForRoles",
                       "additionalProperties": false,
                       "properties": {
                         "groups": {
-                          "title": "Hide for Groups",
                           "type": "array",
-                          "description": "Item will be hidden from users with any of these groups",
                           "items": {
-                            "type": "string",
-                            "description": "name of the group that will not be able to view this item"
+                            "type": "string"
                           }
                         },
                         "roles": {
-                          "title": "Hide for Roles",
                           "type": "array",
-                          "description": "Item will be hidden from users with any of roles",
                           "items": {
-                            "type": "string",
-                            "description": "name of the role that will not be able to view this item"
+                            "type": "string"
                           }
                         }
                       }

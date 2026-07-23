@@ -13,7 +13,7 @@
  */
 
 const fs = require('fs');
-const yaml = require('js-yaml');
+const yaml = require('./yaml');
 const { createRemoteJWKSet, jwtVerify } = require('jose');
 
 /* Normalise the OIDC / Keycloak block from conf.yml into a unified shape.
@@ -22,6 +22,10 @@ function loadOidcSettings(authConfig) {
   if (!authConfig || typeof authConfig !== 'object') return null;
 
   if (authConfig.enableOidc && authConfig.oidc) {
+    if (authConfig.oidc.disableServerSideCheck) {
+      console.warn('[auth-oidc] disableServerSideCheck is set, skipping auth check'); // eslint-disable-line no-console
+      return null;
+    }
     const {
       endpoint, clientId, adminGroup, adminRole, allowedIssuers,
     } = authConfig.oidc;

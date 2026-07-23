@@ -39,12 +39,12 @@ The following file provides a reference of all supported configuration options.
     - [`headerAuth`](#appconfigauthheaderauth-optional) - Auth config for HeaderAuth
 - [**`sections`**](#section) - List of sections
   - [`displayData`](#sectiondisplaydata-optional) - Section display settings
-    - [`show/hideForKeycloakUsers`](#sectiondisplaydatahideforkeycloakusers-sectiondisplaydatashowforkeycloakusers-itemdisplaydatahideforkeycloakusers-and-itemdisplaydatashowforkeycloakusers) - Set user controls
+    - [`show/hideForGroups` and `show/hideForRoles`](#showforgroups-hideforgroups-showforroles-and-hideforroles) - Set group/role controls
   - [`icon`](#sectionicon-and-sectionitemicon) - Icon for a section
   - [`items`](#sectionitem) - List of items
     - [`icon`](#sectionicon-and-sectionitemicon) - Icon for an item
     - [`displayData`](#itemdisplaydata-optional) - Item display settings
-      - [`show/hideForKeycloakUsers`](#sectiondisplaydatahideforkeycloakusers-sectiondisplaydatashowforkeycloakusers-itemdisplaydatahideforkeycloakusers-and-itemdisplaydatashowforkeycloakusers) - Set user controls
+      - [`show/hideForGroups` and `show/hideForRoles`](#showforgroups-hideforgroups-showforroles-and-hideforroles) - Set group/role controls
   - [`widgets`](#sectionwidget-optional) - List of widgets
 - [**Notes**](#notes)
   - [Editing Config through the UI](#editing-config-through-the-ui)
@@ -156,14 +156,6 @@ For more info, see the[Multi-Page docs](/docs/pages-and-sections.md#multi-page-s
 
 ## `appConfig.auth` _(optional)_
 
-> [!NOTE]
-> Since the auth is initiated in the main app entry point (for security), a rebuild is required to apply changes to the auth configuration.
-> Run `yarn build` in the root directory, then restart the server.
-
-> [!WARNING]
-> Built-in auth should **not be used** for security-critical applications, or if your Dashy instance is publicly accessible.
-> For these, it is recommended to use an [alternate authentication method](/docs/authentication.md#alternative-authentication-methods).
-
 **Field** | **Type** | **Required**| **Description**
 --- | --- | --- | ---
 **`users`** | `array` | _Optional_ | An array of objects containing usernames and hashed passwords. If this is not provided, then authentication will be off by default, and you will not need any credentials to access the app. See [`appConfig.auth.users`](#appconfigauthusers-optional). <br>**Note** this method of authentication is handled on the client side, so for security critical situations, it is recommended to use an [alternate authentication method](/docs/authentication.md#alternative-authentication-methods).
@@ -174,6 +166,7 @@ For more info, see the[Multi-Page docs](/docs/pages-and-sections.md#multi-page-s
 **`enableOidc`** | `boolean` | _Optional_ | If set to `true`, then authentication using OIDC will be enabled. Note that you need to have a configured OIDC server and configure it with `auth.oidc`. Defaults to `false`
 **`oidc`** | `object` | _Optional_ | Config options to point Dash to your OIDC configuration. Request `enableOidc: true`. See [`auth.oidc`](#appconfigauthoidc-optional) for more info
 **`enableGuestAccess`** | `boolean` | _Optional_ | When set to `true`, an unauthenticated user will be able to access the dashboard, with read-only access, without having to login. Requires `auth.users` to be configured. Defaults to `false`.
+**`logoutRedirectUrl`** | `string` | _Optional_ | URL to redirect the user to after logging out (useful with [header auth](/docs/authentication/header-auth.md#logging-out), where you also need to end the session on your auth proxy)
 
 For more info, see the **[Authentication Docs](/docs/authentication.md)**
 
@@ -221,6 +214,7 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 **`scope`** | `string` | Required | The scope(s) to request from the OIDC provider
 **`enableSilentRenew`** | `boolean` | _Optional_ | If set to `true`, your session is silently renewed in the background before it expires (only works for providers which support the `offline_access` scope)
 **`allowedIssuers`** | `array` | _Optional_ | List of issuer URLs to accept tokens from. Needed for multi-tenant providers (e.g. Microsoft Entra) where the token issuer differs from the configured `endpoint`. If unset, the issuer from the discovery document is used
+**`disableServerSideCheck`** | `boolean` | _Optional_ | If `true`, the server skips token verification and endpoint protection, so OIDC is client-side only. Not recommended. Defaults to `false`
 
 **[⬆️ Back to Top](#configuring)**
 
@@ -301,8 +295,10 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 **`hideForUsers`** | `string[]` | _Optional_ | Current item will be visible to all users, except for those specified in this list
 **`showForUsers`** | `string[]` | _Optional_ | Current item will be hidden from all users, except for those specified in this list
 **`hideForGuests`** | `boolean` | _Optional_ | Current item will be visible for logged in users, but not for guests (see `appConfig.enableGuestAccess`). Defaults to `false`
-**`hideForKeycloakUsers`** | `object`  | _Optional_ | Current item will be visible to all keycloak users, except for those configured via these groups and roles. See `hideForKeycloakUsers`
-**`showForKeycloakUsers`** | `object`  | _Optional_ | Current item will be hidden from all keycloak users, except for those configured via these groups and roles. See `showForKeycloakUsers`
+**`hideForGroups`** | `string[]` | _Optional_ | Current item will be visible to all users, except for those in any of these SSO groups. See [Group and Role Controls](#showforgroups-hideforgroups-showforroles-and-hideforroles)
+**`showForGroups`** | `string[]` | _Optional_ | Current item will be hidden from all users, except for those in one or more of these SSO groups
+**`hideForRoles`** | `string[]` | _Optional_ | Current item will be visible to all users, except for those with any of these SSO roles
+**`showForRoles`** | `string[]` | _Optional_ | Current item will be hidden from all users, except for those with one or more of these SSO roles
 **`hideFromWorkspace`** | `boolean` | _Optional_ | Current item will be visible in the default view but not in the Workspace view sidebar. Defaults to `false`
 **`hideFromHomepage`** | `boolean` | _Optional_ | If `true`, item is hidden from the home and minimal views until matched by a search. Still visible in workspace, edit mode and single-section view. Defaults to `false`
 
@@ -340,8 +336,10 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 **`hideForUsers`** | `string[]` | _Optional_ | Current section will be visible to all users, except for those specified in this list
 **`showForUsers`** | `string[]` | _Optional_ | Current section will be hidden from all users, except for those specified in this list
 **`hideForGuests`** | `boolean` | _Optional_ | Current section will be visible for logged in users, but not for guests (see `appConfig.enableGuestAccess`). Defaults to `false`
-**`hideForKeycloakUsers`** | `object`  | _Optional_ | Current section will be visible to all keycloak users, except for those configured via these groups and roles. See `hideForKeycloakUsers`
-**`showForKeycloakUsers`** | `object`  | _Optional_ | Current section will be hidden from all keycloak users, except for those configured via these groups and roles. See `showForKeycloakUsers`
+**`hideForGroups`** | `string[]` | _Optional_ | Current section will be visible to all users, except for those in any of these SSO groups. See [Group and Role Controls](#showforgroups-hideforgroups-showforroles-and-hideforroles)
+**`showForGroups`** | `string[]` | _Optional_ | Current section will be hidden from all users, except for those in one or more of these SSO groups
+**`hideForRoles`** | `string[]` | _Optional_ | Current section will be visible to all users, except for those with any of these SSO roles
+**`showForRoles`** | `string[]` | _Optional_ | Current section will be hidden from all users, except for those with one or more of these SSO roles
 **`hideFromWorkspace`** | `boolean` | _Optional_ | Current section will be visible in the default view but not in the Workspace view sidebar. Defaults to `false`
 
 **[⬆️ Back to Top](#configuring)**
@@ -354,12 +352,29 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 
 **[⬆️ Back to Top](#configuring)**
 
-## `section.displayData.hideForKeycloakUsers`, `section.displayData.showForKeycloakUsers`, `item.displayData.hideForKeycloakUsers` and `item.displayData.showForKeycloakUsers`
+## `showForGroups`, `hideForGroups`, `showForRoles` and `hideForRoles`
+
+When using an SSO provider (Keycloak, or any OIDC provider that includes `groups` / `roles` claims in the id_token), pages, sections and items can be shown or hidden based on the user's groups and roles. Set any of these under the `displayData` of a page, section or item:
 
 **Field** | **Type**   | **Required**| **Description**
 --- |------------| --- | ---
-**`groups`** | `string[]` | _Optional_ | Current Section or Item will be hidden or shown based on the user having any of the groups in this list
-**`roles`** | `string[]` | _Optional_ | Current Section or Item will be hidden or shown based on the user having any of the roles in this list
+**`showForGroups`** | `string[]` | _Optional_ | Hidden from all users, except those in one or more of these groups
+**`hideForGroups`** | `string[]` | _Optional_ | Hidden from users in any of these groups
+**`showForRoles`** | `string[]` | _Optional_ | Hidden from all users, except those with one or more of these roles
+**`hideForRoles`** | `string[]` | _Optional_ | Hidden from users with any of these roles
+
+For example:
+
+```yaml
+sections:
+  - name: Admin Tools
+    displayData:
+      showForGroups: [admins]
+    items:
+      - title: Hidden from interns
+        displayData:
+          hideForGroups: [interns]
+```
 
 **[⬆️ Back to Top](#configuring)**
 
