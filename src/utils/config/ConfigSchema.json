@@ -909,8 +909,8 @@
                   "reverse-alphabetical",
                   "provider",
                   "provider-reverse",
-                  "itemID",
-                  "itemID-reverse",
+                  "item-id",
+                  "item-id-reverse",
                   "random"
                 ],
                 "default": "default",
