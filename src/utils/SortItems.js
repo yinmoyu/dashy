@@ -40,8 +40,8 @@ export default function sortItems(items, order, sectionTitle = '') {
   if (ord === 'random') return shuffled(list);
   if (ord === 'provider') return byProvider(list);
   if (ord === 'provider-reverse') return byProvider(list).reverse();
-  if (ord === 'itemID') return byID(list);
-  if (ord === 'itemID-reverse') return byID(list).reverse();
+  if (ord === 'item-id') return byID(list);
+  if (ord === 'item-id-reverse') return byID(list).reverse();
   ErrorHandler(`Unknown Sort order '${ord}'${sectionTitle ? ` under '${sectionTitle}'` : ''}`);
   return list;
 }
