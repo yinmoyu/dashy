@@ -85,7 +85,7 @@
     <EditSection
       v-if="editMenuOpen"
       @closeEditSection="closeEditSection"
-      :sectionIndex="index"
+      :sectionName="title"
       :isAddNew="false"
     />
     <!-- Right-click item options context menu -->
@@ -109,7 +109,7 @@
     />
     <!-- Edit widget menu -->
     <EditWidget v-if="editWidgetMenuOpen"
-      :sectionIndex="index"
+      :sectionName="title"
       :widgetIndex="editingWidgetIndex"
       :isAddNew="addingWidget"
       @closeEditWidget="closeEditWidget"
@@ -275,8 +275,7 @@ export default {
       this.showRemoveConfirm = true;
     },
     confirmRemoveSection() {
-      const payload = { sectionIndex: this.index, sectionName: this.title };
-      this.$store.commit(StoreKeys.REMOVE_SECTION, payload);
+      this.$store.commit(StoreKeys.REMOVE_SECTION, { sectionName: this.title });
     },
     /* Open custom context menu, and set position */
     openContextMenu(e) {
@@ -319,7 +318,7 @@ export default {
     },
     doRemoveWidget() {
       this.$store.commit(StoreKeys.REMOVE_WIDGET, {
-        sectionIndex: this.index,
+        sectionName: this.title,
         widgetIndex: this.pendingRemoveWidgetIndex,
       });
       this.pendingRemoveWidgetIndex = -1;

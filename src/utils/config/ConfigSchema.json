@@ -885,7 +885,7 @@
           "name": {
             "title": "Section Name",
             "type": "string",
-            "description": "Title/ heading for a section"
+            "description": "Title/ heading for a section. Required and must be unique"
           },
           "icon": {
             "title": "Section Icon",

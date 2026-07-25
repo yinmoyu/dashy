@@ -39,3 +39,8 @@ export const applyItemId = (inputSections) => (inputSections || []).map((section
   }
   return next;
 });
+
+/* Returns new sections array, with the `transform` function applied to section with given `name` */
+export const mapSectionByName = (sections, name, transform) => (
+  sections.map((section) => ((section.name || '') === name ? transform(section) : section))
+);
