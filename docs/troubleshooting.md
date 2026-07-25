@@ -34,6 +34,7 @@
   - [Remote Config Not Loading](#remote-config-not-loading)
 - [Build & memory errors](#build--memory-errors)
   - [Yarn Build or Run Error](#yarn-error)
+  - [The engine "node" is incompatible with this module](#the-engine-node-is-incompatible-with-this-module)
   - [`yarn build` fails inside the container](#yarn-build-fails-inside-the-container)
   - [High CPU or RAM Usage on Startup](#high-cpu-or-ram-usage-on-startup)
   - [Heap limit Allocation failed](#ineffective-mark-compacts-near-heap-limit-allocation-failed)
@@ -371,6 +372,19 @@ Alternatively, as a workaround, you have several options:
 
 - Try using [NPM](https://www.npmjs.com/get-npm) instead: So clone, cd, then run `npm install`, `npm run build` and `npm start`
 - Try using [Docker](https://www.docker.com/get-started) instead, and all of the system setup and dependencies will already be taken care of. So from within the directory, just run `docker build -t lissy93/dashy .` to build, and then use docker start to run the project, e.g: `docker run -it -p 8080:8080 lissy93/dashy` (see the [deploying docs](https://github.com/Lissy93/dashy/blob/master/docs/deployment.md#deploy-with-docker) for more info)
+
+### The engine "node" is incompatible with this module
+
+You'll see this error while running `yarn`, if your version of Node is too old or incompatible. 
+
+The solution is to upgrade to the latest LTS version of Node 24.
+Alternatively (not recommended), you can ignore this warning by running `yarn install --ignore-engines`.
+
+
+Dashy needs Node **`^22.18.0 || >=24.11.0`** - that's either the Node 22 LTS line at 22.18.0 or newer, or 24.11.0 or newer.
+Check your current version with `node --version`.
+The easiest way to do this, is to use a version manager, like [nvm](https://github.com/nvm-sh/nvm) to quickly download and apply different node versions. Run `nvm install 24` then `nvm use 24`.
+
 
 ### `yarn build` fails inside the container
 
