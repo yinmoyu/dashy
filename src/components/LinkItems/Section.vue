@@ -488,6 +488,9 @@ export default {
       transition: none !important;
     }
   }
+  :deep(.sortable-fallback) {
+    min-width: 0 !important;
+  }
 }
 
 .widget-list {
