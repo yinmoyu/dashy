@@ -83,8 +83,8 @@ export default {
       if (!interval) interval = this.appConfig.pingCheckInterval;
       if (!interval) return 0;
       interval = Math.floor(interval);
-      if (interval < 0) interval = 0;
-      if (interval > 5) interval = 5;
+      if (interval < 1) return 0;
+      if (interval < 5) interval = 5;
       return interval;
     },
     /* Determine the number of ping icmp packets to send per check */
@@ -99,10 +99,10 @@ export default {
     },
     /* Determine delay in milliseconds for a ping check to complete */
     pingCheckTimeout() {
+      const maxTimeout = this.pingCheckCount * 1000;
       let timeout = this.item.pingCheckTimeout;
       if (!timeout) timeout = this.appConfig.pingCheckTimeout;
-      if (!timeout) return this.pingCheckInterval * 1000;
-      let maxTimeout = this.pingCheckCount * 1000;
+      if (!timeout) return Math.min(this.pingCheckInterval * 1000, maxTimeout);
       if (timeout > maxTimeout) timeout = maxTimeout;
       if (timeout < 1) timeout = 0;
       return timeout;
