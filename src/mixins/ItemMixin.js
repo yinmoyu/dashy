@@ -206,7 +206,9 @@ export default {
       if (this.statusResponse) this.statusResponse.successStatus = undefined; // Reset previous response, to show loading state
       request.get(endpoint)
         .then((response) => {
-          if (response.data) this.statusResponse = response.data;
+          if (response.data && typeof response.data === 'object') {
+            this.statusResponse = response.data;
+          }
         })
         .catch(() => { // Something went very wrong.
           this.statusResponse = {
@@ -228,7 +230,7 @@ export default {
         const endpoint = this.pingCheckApiUrl;
         request.get(endpoint)
           .then((response) => {
-            if (response.data) this.pingResponse = response.data;
+            if (response.data && typeof response.data === 'object') this.pingResponse = response.data;
           })
           .catch(() => { // Something went very wrong.
             this.pingResponse = {

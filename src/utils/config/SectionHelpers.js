@@ -15,9 +15,9 @@ export const shouldBeVisible = (routeName) => {
 
 /* Based on section title, item name and index, return a string value for ID */
 const makeItemId = (sectionStr, itemStr, index) => {
-  const sectionTitle = sectionStr || `unlabeledSec_${Math.random()}`;
+  const sectionTitle = String(sectionStr || `unlabeledSec_${Math.random()}`);
   const charSum = sectionTitle.split('').map((a) => a.charCodeAt(0)).reduce((x, y) => x + y);
-  const newItemStr = itemStr || `unknown_${Math.random()}`;
+  const newItemStr = String(itemStr || `unknown_${Math.random()}`);
   const itemTitleStr = newItemStr.replace(/\s+/g, '-').replace(/[^a-zA-Z ]/g, '').toLowerCase();
   return `${index}_${charSum}_${itemTitleStr}`;
 };
