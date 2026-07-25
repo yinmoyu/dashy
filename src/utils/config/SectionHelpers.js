@@ -22,6 +22,18 @@ const makeItemId = (sectionStr, itemStr, index) => {
   return `${index}_${charSum}_${itemTitleStr}`;
 };
 
+/* Return a new array of sections, without item/widget ids so they don't get saved */
+export const stripItemIds = (inputSections) => (inputSections || []).map((section) => {
+  const next = { ...section };
+  if (Array.isArray(section.items)) {
+    next.items = section.items.map(({ id: _id, ...item }) => item);
+  }
+  if (Array.isArray(section.widgets)) {
+    next.widgets = section.widgets.map(({ id: _id, ...widget }) => widget);
+  }
+  return next;
+});
+
 /* Return a new array of sections with a unique id on each item and widget */
 export const applyItemId = (inputSections) => (inputSections || []).map((section) => {
   const next = { ...section };
