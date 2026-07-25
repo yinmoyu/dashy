@@ -1,6 +1,6 @@
 const request = require('./request');
 
-const currentVersion = require('../package.json').version;
+const currentVersion = require('../../package.json').version;
 
 const packageUrl = 'https://raw.githubusercontent.com/Lissy93/dashy/master/package.json';
 

@@ -17,7 +17,7 @@
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
     "pm2-start": "npx pm2 start server.js",
-    "validate-config": "node services/config-validator",
+    "validate-config": "node services/utils/config-validator",
     "health-check": "node services/healthcheck",
     "dependency-audit": "npx improved-yarn-audit --ignore-dev-deps"
   },

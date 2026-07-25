@@ -1,5 +1,5 @@
 /* A Netlify cloud function to handle requests to CORS-disabled services */
-const request = require('../request');
+const request = require('../utils/request');
 
 exports.handler = (event, context, callback) => {
   // Get input data

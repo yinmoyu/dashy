@@ -1,5 +1,5 @@
 /* A cloud function that wraps the status checking method, for use on Netlify */
-const statusCheck = require('../status-check');
+const statusCheck = require('../endpoints/status-check');
 
 exports.handler = (event, context, callback) => {
   const paramStr = event.rawQuery;

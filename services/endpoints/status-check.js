@@ -3,7 +3,7 @@
  * It accepts a single url parameter, and will make an empty GET request to that
  * endpoint, and then resolve the response status code, time taken, and short message
  */
-const request = require('./request');
+const request = require('../utils/request');
 const { validateTargetUrl } = request;
 
 /* Determines if successful from the HTTP response code */
