@@ -532,6 +532,11 @@ Dashy's server is rejecting the id_token. Check Dashy's container logs for `[aut
 - **Dashy server can't reach Authentik**. The Dashy container fails to fetch the discovery document. Exec into the container and try `wget -qO- https://auth.example.com/application/o/dashy/.well-known/openid-configuration`
 - **Clock skew**. The middleware allows 30 seconds of drift. If a container's clock is further off than that, `exp`/`iat` checks fail
 
+If you've exhausted these and need a stop-gap, set `oidc.disableServerSideCheck: true` to skip server-side verification and fall back to client-side-only auth. This leaves Dashy's server routes unprotected, so only use it in a trusted environment (see the [OIDC docs](/docs/authentication/oidc.md)).
+
+### Sent back to the login page after a while
+Your SSO session's id_token expired, so Dashy signs you out (rather than leaving a logged-in-looking UI whose API calls all silently 401). For OIDC, set `oidc.enableSilentRenew: true` to refresh the session in the background before it lapses; this needs your provider to issue refresh tokens (Dashy adds the `offline_access` scope automatically when it's on). Otherwise, just sign in again when prompted.
+
 ### Logged in but no admin controls
 The id_token doesn't include the groups claim. Open browser devtools after logging in, find the call to `/application/o/dashy/userinfo/`, and check the response. You should see a `groups` array containing `dashy-admins`. If not:
 - The `groups` scope mapping doesn't exist, or is not attached to the provider's property mappings

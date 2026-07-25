@@ -2,7 +2,7 @@ import sha256 from 'crypto-js/sha256';
 import ConfigAccumulator from '@/utils/config/ConfigAccumalator';
 import ErrorHandler from '@/utils/logging/ErrorHandler';
 import { cookieKeys, localStorageKeys, userStateEnum } from '@/utils/config/defaults';
-import getApiAuthHeader from '@/utils/auth/getApiAuthHeader';
+import getApiAuthHeader, { getApiAuthState } from '@/utils/auth/getApiAuthHeader';
 import { isKeycloakEnabled } from '@/utils/auth/KeycloakAuth';
 import { isOidcEnabled } from '@/utils/auth/OidcAuth';
 
@@ -81,6 +81,9 @@ export const makeBasicAuthHeaders = () => {
   return password ? { headers: { Authorization: basicAuth } } : {};
 };
 
+/* True when server-side OIDC token verification is turned off / client-only mode */
+const isServerSideCheckDisabled = () => Boolean(getAppConfig().auth?.oidc?.disableServerSideCheck);
+
 /**
  * Checks if the user is currently authenticated
  * @returns {Boolean} Will return true if the user is logged in, else false
@@ -90,11 +93,14 @@ export const isLoggedIn = () => {
   const cookieToken = getCookieToken();
 
   if (isOidcEnabled() || isKeycloakEnabled()) {
-    const username = localStorage[localStorageKeys.USERNAME]; // Get username
+    const username = localStorage[localStorageKeys.USERNAME];
     if (!username) return false; // No username
-    return users.some((user) => (
-      user.user === username || generateUserToken(user) === cookieToken
-    ));
+    // If client-only mode, then skip the need to verify id_token, trust username
+    if (isServerSideCheckDisabled()) return true;
+    // The id_token is our server credential, so once it expires every API call 401s
+    if (getApiAuthState().ok) return true;
+    // Valid built-in cookie session (for mixed OIDC + users setup)
+    return users.some((user) => (user.hash || user.password) && generateUserToken(user) === cookieToken);
   }
 
   return users.some((user) => {
