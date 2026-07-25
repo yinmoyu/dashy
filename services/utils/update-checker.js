@@ -50,4 +50,7 @@ const runCheck = async () => {
   }
 };
 
-runCheck().catch(() => { /* never propagate — module-load must not throw */ });
+// Skip version check when running tests
+if (process.env.NODE_ENV !== 'test') {
+  runCheck().catch(() => { /* just chillin */ });
+}

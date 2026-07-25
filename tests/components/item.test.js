@@ -261,13 +261,13 @@ describe('Computed: statusCheckInterval', () => {
     expect(wrapper.vm.statusCheckInterval).toBe(15);
   });
 
-  it('clamps to max 60', () => {
+  it('clamps to a 5 minute maximum', () => {
     const { wrapper } = mountItem({
       item: {
-        id: '1', title: 'X', url: '#', statusCheckInterval: 120,
+        id: '1', title: 'X', url: '#', statusCheckInterval: 600,
       },
     });
-    expect(wrapper.vm.statusCheckInterval).toBe(60);
+    expect(wrapper.vm.statusCheckInterval).toBe(300);
   });
 
   it('clamps values less than 1 to 0', () => {

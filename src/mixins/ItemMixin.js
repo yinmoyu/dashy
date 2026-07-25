@@ -58,9 +58,9 @@ export default {
     },
     /* Determine how often to re-fire status checks */
     statusCheckInterval() {
-      let interval = this.item.statusCheckInterval || this.appConfig.statusCheckInterval;
+      let interval = this.item.statusCheckInterval ?? this.appConfig.statusCheckInterval;
       if (!interval) return 0;
-      if (interval > 60) interval = 60;
+      if (interval > 300) interval = 300;
       if (interval < 1) interval = 0;
       return interval;
     },
@@ -79,8 +79,7 @@ export default {
     },
     /* Determine how often to re-fire ping checks */
     pingCheckInterval() {
-      let interval = this.item.pingCheckInterval;
-      if (!interval) interval = this.appConfig.pingCheckInterval;
+      let interval = this.item.pingCheckInterval ?? this.appConfig.pingCheckInterval;
       if (!interval) return 0;
       interval = Math.floor(interval);
       if (interval < 1) return 0;
@@ -211,8 +210,8 @@ export default {
         })
         .catch(() => { // Something went very wrong.
           this.statusResponse = {
-            statusText: 'Failed to make request',
-            statusSuccess: false,
+            successStatus: false,
+            message: 'Failed to make request',
           };
         });
     },
@@ -221,8 +220,8 @@ export default {
       if (!this.isPingCheckEnabled) return;
       if (!this.pingCheckHost) {
         this.pingResponse = {
-          statusText: 'Host not set or invalid',
-          statusSuccess: false,
+          successStatus: false,
+          message: 'Host not set or invalid',
         };
       } else {
         if (this.pingResponse) this.pingResponse.successStatus = undefined; // Reset previous response, to show loading state
@@ -233,8 +232,8 @@ export default {
           })
           .catch(() => { // Something went very wrong.
             this.pingResponse = {
-              statusText: 'Failed to make Ping request',
-              statusSuccess: false,
+              successStatus: false,
+              message: 'Failed to make Ping request',
             };
           });
       }
