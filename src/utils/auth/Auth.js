@@ -178,8 +178,8 @@ export const login = (username, pass, timeout) => {
   const now = new Date();
   const expiry = new Date(now.setTime(now.getTime() + timeout)).toGMTString();
   const userObject = { user: username, hash: sha256(pass).toString().toLowerCase() };
-  document.cookie = `${cookieKeys.AUTH_TOKEN}=${generateUserToken(userObject)};`
-    + `${timeout > 0 ? `expires=${expiry}` : ''}`;
+  document.cookie = `${cookieKeys.AUTH_TOKEN}=${generateUserToken(userObject)}; Path=/`
+    + `${timeout > 0 ? `; expires=${expiry}` : ''}`;
   localStorage.setItem(localStorageKeys.USERNAME, username);
 };
 
@@ -187,7 +187,7 @@ export const login = (username, pass, timeout) => {
  * Removed the browsers' cookie, causing user to be logged out
  */
 export const logout = () => {
-  document.cookie = `${cookieKeys.AUTH_TOKEN}=null`;
+  document.cookie = `${cookieKeys.AUTH_TOKEN}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/`;
   localStorage.removeItem(localStorageKeys.USERNAME);
 };
 
