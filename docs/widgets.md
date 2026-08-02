@@ -407,7 +407,7 @@ Keep an eye on the expiry dates of your domain names, using public whois records
 **Field** | **Type** | **Required** | **Description**
 --- | --- | --- | ---
 **`domain`** | `string` |  Required | The domain to check
-**`apiKey`** | `string` |  Required | You can get your free API key from [my.whoapi.com](https://my.whoapi.com/user/signup)
+**`apiKey`** | `string` |  Required | Get your API key from [my.whoapi.com](https://my.whoapi.com/user/signup), requires a [paid plan](https://whoapi.com/whois-api-pricing/)
 **`showFullInfo`** | `boolean` |  _Optional_ | If set to true, the toggle-full-info panel will be open by default
 
 #### Example
