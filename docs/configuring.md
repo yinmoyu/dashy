@@ -10,7 +10,7 @@ All app configuration is specified in [`/user-data/conf.yml`](https://github.com
   - From the UI, under the config menu there is a JSON editor, with built-in validation, documentation and advanced options
 - **UI Visual Editor** _(3/5 reliability, 5/5 usability)_
   - From the UI, enter the Interactive Edit Mode, then click any part of the page to edit. Changes are previewed live, and then saved to disk
-- **REST API** _(Coming soon)_
+- **REST API** _(see [API docs](/docs/api.md))_
   - Programmatically edit config either through the command line, using a script or a third-party application
 
 ## Tips
@@ -39,12 +39,12 @@ The following file provides a reference of all supported configuration options.
     - [`headerAuth`](#appconfigauthheaderauth-optional) - Auth config for HeaderAuth
 - [**`sections`**](#section) - List of sections
   - [`displayData`](#sectiondisplaydata-optional) - Section display settings
-    - [`show/hideForKeycloakUsers`](#sectiondisplaydatahideforkeycloakusers-sectiondisplaydatashowforkeycloakusers-itemdisplaydatahideforkeycloakusers-and-itemdisplaydatashowforkeycloakusers) - Set user controls
+    - [`show/hideForGroups` and `show/hideForRoles`](#showforgroups-hideforgroups-showforroles-and-hideforroles) - Set group/role controls
   - [`icon`](#sectionicon-and-sectionitemicon) - Icon for a section
   - [`items`](#sectionitem) - List of items
     - [`icon`](#sectionicon-and-sectionitemicon) - Icon for an item
     - [`displayData`](#itemdisplaydata-optional) - Item display settings
-      - [`show/hideForKeycloakUsers`](#sectiondisplaydatahideforkeycloakusers-sectiondisplaydatashowforkeycloakusers-itemdisplaydatahideforkeycloakusers-and-itemdisplaydatashowforkeycloakusers) - Set user controls
+      - [`show/hideForGroups` and `show/hideForRoles`](#showforgroups-hideforgroups-showforroles-and-hideforroles) - Set group/role controls
   - [`widgets`](#sectionwidget-optional) - List of widgets
 - [**Notes**](#notes)
   - [Editing Config through the UI](#editing-config-through-the-ui)
@@ -73,8 +73,10 @@ The following file provides a reference of all supported configuration options.
 **`title`** | `string` |  Required | Your dashboard title, displayed in the header and browser tab
 **`description`** | `string` | _Optional_ | Description of your dashboard, also displayed as a subtitle
 **`navLinks`** | `array` | _Optional_ | Optional list of a maximum of 6 links, which will be displayed in the navigation bar. See [`navLinks`](#pageinfonavlinks-optional)
-**`footerText`** | `string` | _Optional_ | Text to display in the footer (note that this will override the default footer content). This can also include HTML and inline CSS
+**`footer`** | `string` | _Optional_ | Text to display in the footer. When omitted, no footer is rendered. Supports inline HTML (sanitized before render)
 **`logo`** | `string` | _Optional_ | The path to an image to display in the header (to the right of the title). This can be either local, where `/` is the root of `./public`, or any remote image, such as `https://i.ibb.co/yhbt6CY/dashy.png`. It's recommended to scale your image down, so that it doesn't impact load times
+**`favicon`** | `string` | _Optional_ | URL or path to a custom favicon shown in the browser tab. Can be absolute (`https://...`), root-relative (`/icons/x.png`), or a `data:` URI
+**`color`** | `string` | _Optional_ | Theme colour applied to the browser chrome (mobile address bar). Any valid CSS color (e.g. `#ff00a7`) is accepted
 
 **[⬆️ Back to Top](#configuring)**
 
@@ -84,7 +86,7 @@ The following file provides a reference of all supported configuration options.
 --- | --- | --- | ---
 **`title`** | `string` |  Required | The text to display on the link button
 **`path`** | `string` | Required | The URL to navigate to when clicked. Can be relative (e.g. `/about`) or absolute (e.g. `https://example.com` or `http://192.168.1.1`)
-**`target`** | `string` |  _Optional_ | The opening method (external links only). Can be either `newtab`, `sametab`, `top` or `parent`. Defaults to `newtab`
+**`target`** | `string` |  _Optional_ | The opening method (external links only). Can be either `newtab`, `sametab`, `newwindow`, `top` or `parent`. Defaults to `newtab`
 
 **[⬆️ Back to Top](#configuring)**
 
@@ -104,11 +106,16 @@ For more info, see the[Multi-Page docs](/docs/pages-and-sections.md#multi-page-s
 **Field** | **Type** | **Required**| **Description**
 --- | --- | --- | ---
 **`language`** | `string` | _Optional_ | The 2 (or 4-digit) [ISO 639-1 code](https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes) for your language, e.g. `en` or `en-GB`. This must be a language that the app has already been [translated](https://github.com/Lissy93/dashy/tree/master/src/assets/locales) into. If your language is unavailable, Dashy will fallback to English. By default Dashy will attempt to auto-detect your language, although this may not work on some privacy browsers.
-~~**`startingView`**~~ | `enum` | _Optional_ | Which page to load by default, and on the base page or domain root. You can still switch to different views from within the UI. Can be either `default`, `minimal` or `workspace`. Defaults to `default`. NOTE: This has been replaced by an environmental variable: `VUE_APP_STARTING_VIEW` in V3 onwards
+**`startingView`** | `enum` | _Optional_ | Which view to land on when visiting `/`. One of `home`, `minimal` or `workspace`. Defaults to `home`. Applied at runtime, so no rebuild is needed. You can always switch views from the UI. (Legacy value `default` is accepted as an alias for `home`.)
 **`defaultOpeningMethod`** | `enum` | _Optional_ | The default opening method for items, if no `target` is specified for a given item. Can be either `newtab`, `sametab`, `modal`, `workspace`, `clipboard`, `top` or `parent`. Defaults to `newtab`
 **`statusCheck`** | `boolean` | _Optional_ | When set to `true`, Dashy will ping each of your services and display their status as a dot next to each item. This can be overridden by setting `statusCheck` under each item. Defaults to `false`
 **`statusCheckInterval`** | `number` | _Optional_ | The number of seconds between checks. If set to `0` then service will only be checked on initial page load, which is usually the desired functionality. If value is less than `10` you may experience a hit in performance. Defaults to `0`
 **`statusCheckAccessibility`** | `boolean` | _Optional_ | When set to `true`, status indicators will use distinct shapes to indicate status for color-blind users. Defaults to `false`
+**`pingCheckEnabled`** | `boolean` | _Optional_ | When set to `true`, Dashy will make a real ICMP ping to each of your hosts and display their status as a dot next to each item. This can be overridden by setting `pingCheckEnabled` under each item. Defaults to `false`
+**`pingCheckInterval`** | `number` | _Optional_ | The number of seconds between checks. If set to `0` then service will only be checked on initial page load. The value is limited to `5` seconds min to prevent performance issues. Defaults to `0`
+**`pingCheckAccessibility`** | `boolean` | _Optional_ | When set to `true`, status indicators will use distinct shapes to indicate status for color-blind users. Defaults to `false`
+**`pingCheckCount`** | `number` | _Optional_ | The number of ping ICMP packets sent to the host per check. This can be overridden by setting `pingCheckCount` under each item. If set to `0` then `3` packets will be sent. The value is limited to `5` packets max to prevent performance issues. Defaults to `0`
+**`pingCheckTimeout`** | `number` | _Optional_ | The number of milliseconds to wait for a ping to complete. This can be overriden by setting `pingCheckTimeout` under each item. If set to `0` then it uses the same value as `pingCheckInterval` but converted in milliseconds. The value is limited to 1000 ms per `pingCheckCount` to prevent performance issues. Defaults to `0`
 **`webSearch`** | `object` | _Optional_ | Configuration options for the web search feature, set your default search engine, opening method or disable web search. See [`webSearch`](#appconfigwebsearch-optional)
 **`backgroundImg`** | `string` | _Optional_ | Path to an optional full-screen app background image. This can be either remote (http) or local (relative to /app/public/item-icons/ inside the container). Note that this will slow down initial load
 **`enableFontAwesome`** | `boolean` | _Optional_ | If set to `true` font-awesome will be loaded, if set to `false` they will not be. if left blank font-awesome will be enabled only if required by 1 or more icons
@@ -117,7 +124,7 @@ For more info, see the[Multi-Page docs](/docs/pages-and-sections.md#multi-page-s
 **`faviconApi`** | `enum` | _Optional_ | Only applicable if you are using favicons for item icons. Specifies which service to use to resolve favicons. Set to `local` to do this locally, without using an API. Services running locally will use this option always. Available options are: `local`, `allesedv`, `iconhorse`, `faviconkit`, `duckduckgo`, `yandex`, `google`, `besticon`, `webmasterapi` and `mcapi`. Defaults to `allesedv`. See [Icons](/docs/icons.md#favicons) for more info
 **`auth`** | `object` | _Optional_ | All settings relating to user authentication. See [`auth`](#appconfigauth-optional)
 **`defaultIcon`** | `string` | _Optional_ | An icon to be applied to any items, which don't already have an icon set. See [Icon Docs](/docs/icons.md#default-icon) for more info
-**`layout`** | `enum` | _Optional_ | Layout for homepage, either `horizontal`, `vertical` or `auto`. Defaults to `auto`. This specifies the layout and direction of how sections are positioned on the home screen. This can also be modified and overridden from the UI.
+**`layout`** | `enum` | _Optional_ | Layout for homepage, one of `auto`, `horizontal`, `vertical` or `masonry`. Defaults to `auto`. Specifies the layout and direction of how sections are positioned on the home screen. `auto` uses a responsive CSS grid where each section's footprint is controlled by `displayData.cols` and `displayData.rows`. `masonry` uses a responsive grid where heights follow content, so shorter sections flow into the gaps left by taller neighbours (`rows` is ignored, `cols` still controls width). This can also be modified and overridden from the UI.
 **`iconSize`** | `enum` | _Optional_ | The size of link items / icons. Can be either `small`, `medium,` or `large`. Defaults to `medium`. This can also be set directly from the UI.
 **`colCount`** | `number` | _Optional_ | The number of columns of sections displayed on the homepage, using the default view. Should be in integer between `1` and `8`. Note that by default this is applied responsively, based on current screen size, and specifying a value here will override this behavior, which may not be desirable.
 **`contentMaxWidth`** | `string` or `number` | _Optional_ | Sets the max width of the main sections area on the homepage, overriding the responsive default. Can be a percentage, or any CSS unit
@@ -128,7 +135,7 @@ For more info, see the[Multi-Page docs](/docs/pages-and-sections.md#multi-page-s
 **`customColors`** | `object`| _Optional_ | Enables you to apply a custom color palette to any given theme. Use the theme name (lowercase) as the key, for an object including key-value-pairs, with the color variable name as keys, and 6-digit hex code as value. See [Theming](/docs/theming.md#modifying-theme-colors) for more info
 **`externalStyleSheet`** | `string`  or `string[]` | _Optional_ | Either a URL to an external stylesheet or an array or URLs, which can be applied as themes within the UI
 **`customCss`** | `string` | _Optional_ | Raw CSS that will be applied to the page. This can also be set from the UI. Please minify it first.
-**`hideComponents`** | `object` | _Optional_ | A list of key page components (header, footer, search, settings, etc) that are present by default, but can be removed using this option. See [`appConfig.hideComponents`](#appconfighideComponents-optional)
+**`hideComponents`** | `object` | _Optional_ | A list of key page components (header, nav, search, settings) that are present by default, but can be removed using this option. See [`appConfig.hideComponents`](#appconfighideComponents-optional)
 **`enableMultiTasking`** | `boolean` | _Optional_ | If set to true, will keep apps open in the background when in the workspace view. Useful for quickly switching between multiple sites, and preserving their state, but comes at the cost of performance.
 **`workspaceLandingUrl`** | `string` | _Optional_ | The URL or an app, service or website to launch when the workspace view is opened, before another service has been launched
 **`preventWriteToDisk`** | `boolean` | _Optional_ | If set to `true`, users will be prevented from saving config changes to disk through the UI
@@ -142,19 +149,12 @@ For more info, see the[Multi-Page docs](/docs/pages-and-sections.md#multi-page-s
 **`disableSmartSort`** | `boolean` | _Optional_ | For the most-used and last-used app sort functions to work, a basic open-count is stored in local storage. If you do not want this to happen, then disable smart sort here, but you wil no longer be able to use these sort options. Defaults to `false`.
 **`disableUpdateChecks`** | `boolean` | _Optional_ | If set to true, Dashy will not check for updates. Defaults to `false`.
 **`enableServiceWorker`** | `boolean` | _Optional_ | Service workers cache web applications to improve load times and offer basic offline functionality, and are disabled by default in Dashy. The service worker can sometimes cause older content to be cached, requiring the app to be hard-refreshed. If you do not want SW functionality, or are having issues with caching, set this property to `false` to disable all service workers.
+**`enableAuthProxyCompat`** | `boolean` | _Optional_ | Only relevant when `enableServiceWorker` is `true` and when Dashy sits behind an authentication proxy (such as Cloudflare Zero Trust or Authelia). Set this to `true` to detect that redirect on load, unregister the service worker, and reload so re-authentication can proceed. Defaults to `false`.
 **`disableContextMenu`** | `boolean` | _Optional_ | If set to `true`, the custom right-click context menu will be disabled. Defaults to `false`.
 
 **[⬆️ Back to Top](#configuring)**
 
 ## `appConfig.auth` _(optional)_
-
-> [!NOTE]
-> Since the auth is initiated in the main app entry point (for security), a rebuild is required to apply changes to the auth configuration.
-> You can trigger a rebuild through the UI, under Config --> Rebuild, or by running `yarn build` in the root directory.
-
-> [!WARNING]
-> Built-in auth should **not be used** for security-critical applications, or if your Dashy instance is publicly accessible.
-> For these, it is recommended to use an [alternate authentication method](/docs/authentication.md#alternative-authentication-methods).
 
 **Field** | **Type** | **Required**| **Description**
 --- | --- | --- | ---
@@ -166,6 +166,7 @@ For more info, see the[Multi-Page docs](/docs/pages-and-sections.md#multi-page-s
 **`enableOidc`** | `boolean` | _Optional_ | If set to `true`, then authentication using OIDC will be enabled. Note that you need to have a configured OIDC server and configure it with `auth.oidc`. Defaults to `false`
 **`oidc`** | `object` | _Optional_ | Config options to point Dash to your OIDC configuration. Request `enableOidc: true`. See [`auth.oidc`](#appconfigauthoidc-optional) for more info
 **`enableGuestAccess`** | `boolean` | _Optional_ | When set to `true`, an unauthenticated user will be able to access the dashboard, with read-only access, without having to login. Requires `auth.users` to be configured. Defaults to `false`.
+**`logoutRedirectUrl`** | `string` | _Optional_ | URL to redirect the user to after logging out (useful with [header auth](/docs/authentication/header-auth.md#logging-out), where you also need to end the session on your auth proxy)
 
 For more info, see the **[Authentication Docs](/docs/authentication.md)**
 
@@ -211,6 +212,10 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 **`adminRole`** | `string` | _Optional_ | The role that will be considered as admin.
 **`adminGroup`** | `string` | _Optional_ | The group that will be considered as admin.
 **`scope`** | `string` | Required | The scope(s) to request from the OIDC provider
+**`enableSilentRenew`** | `boolean` | _Optional_ | If set to `true`, your session is silently renewed in the background before it expires (only works for providers which support the `offline_access` scope)
+**`postLogoutRedirectUri`** | `string` | _Optional_ | URL to send users back to after logging out at the provider (sent as `post_logout_redirect_uri`). Must be registered as a valid post-logout redirect URI with your provider. If unset, no redirect is requested
+**`allowedIssuers`** | `array` | _Optional_ | List of issuer URLs to accept tokens from. Needed for multi-tenant providers (e.g. Microsoft Entra) where the token issuer differs from the configured `endpoint`. If unset, the issuer from the discovery document is used
+**`disableServerSideCheck`** | `boolean` | _Optional_ | If `true`, the server skips token verification and endpoint protection, so OIDC is client-side only. Not recommended. Defaults to `false`
 
 **[⬆️ Back to Top](#configuring)**
 
@@ -219,7 +224,7 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 **Field** | **Type** | **Required**| **Description**
 --- | --- | --- | ---
 **`disableWebSearch`** | `boolean` | _Optional_ | Web search is enabled by default, but can be disabled by setting this property to `true`. Defaults to `false`
-**`searchEngine`** | `string` | _Optional_ | Set the key name for your search engine. Can also use a custom engine by setting this property to `custom`. Currently supported: `duckduckgo`, `google`, `whoogle`, `qwant`, `startpage`, `searx-bar` and `searx-info`. Defaults to `duckduckgo`
+**`searchEngine`** | `string` | _Optional_ | Set the key name for your search engine. Can also use a custom engine by setting this property to `custom`. See the [searching docs](./searching.md#setting-search-engine) for the full list of built-in keys. Defaults to `duckduckgo`
 **`customSearchEngine`** | `string` | _Optional_ | You can also use a custom search engine, or your own self-hosted instance. This requires `searchEngine: custom` to be set. Then add the URL of your service, with GET query string included here
 **`openingMethod`** | `string` | _Optional_ | Set your preferred opening method for search results: `newtab`, `sametab`, `workspace`. Defaults to `newtab`
 **`searchBangs`** | `object` | _Optional_ | A key-value-pair set of custom search _bangs_ for redirecting query to a specific app or search engine. The key of each should be the bang you will type (typically starting with `/`, `!` or `:`), and value is the destination, either as a search engine key (e.g. `reddit`) or a URL with search parameters (e.g. `https://en.wikipedia.org/w/?search=`)
@@ -235,7 +240,6 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 **`hideNav`** | `boolean` | _Optional_ | If set to `true`, the navigation menu will not be visible. Defaults to `false`
 **`hideSearch`** | `boolean` | _Optional_ | If set to `true`, the search bar will not be visible. Defaults to `false`
 **`hideSettings`** | `boolean` | _Optional_ | If set to `true`, the settings menu will be initially collapsed. Defaults to `false`
-**`hideFooter`** | `boolean` | _Optional_ | If set to `true`, the footer will not be visible. Defaults to `false`
 
 **[⬆️ Back to Top](#configuring)**
 
@@ -258,6 +262,9 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 **`title`** | `string` | Required | The text to display/ title of a given item. Max length `18`
 **`description`** | `string` | _Optional_ | Additional info about an item, which is shown in the tooltip on hover, or visible on large tiles
 **`url`** | `string` | _Optional_ | The URL / location of web address for when the item is clicked
+**`localUrl`** | `string` | _Optional_ | An alternative URL (e.g. a LAN address) that is preferred whenever it is reachable from your browser
+**`localUrlTimeout`** | `number` | _Optional_ | Milliseconds to wait for the `localUrl` reachability probe before giving up and using `url`. Between `300` and `5000`. Defaults to `1500`
+**`localUrlCheckInterval`** | `number` | _Optional_ | Seconds between background re-checks of `localUrl`. `0` means only check on page load and when the browser tab regains focus. `300` max. Defaults to `0`
 **`icon`** | `string` | _Optional_ | The icon for a given item. Can be a font-awesome icon, favicon, remote URL or local URL. See [`item.icon`](#sectionicon-and-sectionitemicon)
 **`target`** | `string` | _Optional_ | The opening method for when the item is clicked, either `newtab`, `sametab`, `modal`, `workspace`, `clipboard`, `top` or `parent`. Where `newtab` will open the link in a new tab, `sametab` will open it in the current tab, and `modal` will open a pop-up modal, `workspace` will open in the Workspace view and `clipboard` will copy the URL to system clipboard (but not launch app). Defaults to `newtab`
 **`hotkey`** | `number` | _Optional_ | Give frequently opened applications a numeric hotkey, between `0 - 9`. You can then just press that key to launch that application.
@@ -268,6 +275,11 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 **`statusCheckAllowInsecure`** | `boolean` | _Optional_ | By default, any request to insecure content will be blocked. Setting this option to `true` will disable the `rejectUnauthorized` option, enabling you to ping non-HTTPS services for the current item. Defaults to `false`
 **`statusCheckAcceptCodes`** | `string` | _Optional_ | If your service's response code is anything other than 2xx, then you can opt to specify an alternative success code. E.g. if you expect your server to return 403, but still want the status indicator to be green, set this value to `403`
 **`statusCheckMaxRedirects`** | `number` | _Optional_ | If your service redirects to another page, and you would like status checks to follow redirects, then specify the maximum number of redirects here. Defaults to `0` / will not follow redirects
+**`pingCheckEnabled`** | `boolean` | _Optional_ | When set to `true`, Dashy will make a real ICMP ping to each of your hosts and display their status as a dot next to each item. The value here will override `appConfig.pingCheckEnabled` so you can turn off or on pings for a given host. Defaults to `appConfig.pingCheckEnabled`, falls back to `false`
+**`pingCheckHost`** | `string` | _Optional_ | FQDN hostname or IPV4 address of the host to ping. If empty or not defined then it uses the item's url host and if it is also invalid then no ping is performed. Defaults to `undefined`
+**`pingCheckInterval`** | `number` | _Optional_ | The number of seconds between checks. The value will override `appConfig.pingCheckInterval` so you can adjust the ping interval per host. Defaults to `appConfig.pingCheckInterval`, falls back to `0`
+**`pingCheckCount`** | `number` | _Optional_ | The number of ping ICMP packets sent to the host per check. The value will override `appConfig.pingCheckCount` so you can decide to send a different number of ping ICMP packets per host. Defaults to `appConfig.pingCheckCount`, falls back to `0`
+**`pingCheckTimeout`** | `number` | _Optional_ | The number of milliseconds to wait for a ping to complete. The value will override `appConfig.pingCheckTimeout` so you can adjust the timeout per host. Defaults to `appConfig.pingCheckTimeout`, falls back to `0`
 **`color`** | `string` | _Optional_ | An optional color for the text and font-awesome icon to be displayed in. Note that this will override the current theme and so may not display well
 **`rel`** | `string` | _Optional_ | The value of the `rel` attribute for the link. Useful for specifying the relationship between the target link/document and Dashy. Defaults to `noopener noreferrer`
 **`backgroundColor`** | `string` | _Optional_ | An optional background fill color for the that given item. Again, this will override the current theme and so might not display well against the background
@@ -284,9 +296,12 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 **`hideForUsers`** | `string[]` | _Optional_ | Current item will be visible to all users, except for those specified in this list
 **`showForUsers`** | `string[]` | _Optional_ | Current item will be hidden from all users, except for those specified in this list
 **`hideForGuests`** | `boolean` | _Optional_ | Current item will be visible for logged in users, but not for guests (see `appConfig.enableGuestAccess`). Defaults to `false`
-**`hideForKeycloakUsers`** | `object`  | _Optional_ | Current item will be visible to all keycloak users, except for those configured via these groups and roles. See `hideForKeycloakUsers`
-**`showForKeycloakUsers`** | `object`  | _Optional_ | Current item will be hidden from all keycloak users, except for those configured via these groups and roles. See `showForKeycloakUsers`
+**`hideForGroups`** | `string[]` | _Optional_ | Current item will be visible to all users, except for those in any of these SSO groups. See [Group and Role Controls](#showforgroups-hideforgroups-showforroles-and-hideforroles)
+**`showForGroups`** | `string[]` | _Optional_ | Current item will be hidden from all users, except for those in one or more of these SSO groups
+**`hideForRoles`** | `string[]` | _Optional_ | Current item will be visible to all users, except for those with any of these SSO roles
+**`showForRoles`** | `string[]` | _Optional_ | Current item will be hidden from all users, except for those with one or more of these SSO roles
 **`hideFromWorkspace`** | `boolean` | _Optional_ | Current item will be visible in the default view but not in the Workspace view sidebar. Defaults to `false`
+**`hideFromHomepage`** | `boolean` | _Optional_ | If `true`, item is hidden from the home and minimal views until matched by a search. Still visible in workspace, edit mode and single-section view. Defaults to `false`
 
 **[⬆️ Back to Top](#configuring)**
 
@@ -311,19 +326,21 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 **`sortBy`** | `string` | _Optional_ | The sort order for items within the current section. By default items are displayed in the order in which they are listed in within the config. The following sort options are supported: `most-used` (most opened apps first), `last-used` (the most recently used apps), `alphabetical`, `reverse-alphabetical`, `random` and `default`
 **`collapsed`** | `boolean` | _Optional_ | If true, the section will  be collapsed initially, and will need to be clicked to open. Useful for less regularly used, or very long sections. Defaults to `false`
 **`cutToHeight`** | `boolean` | _Optional_ | By default, sections will fill available space. Set this option to true to match section height with content height
-**`rows`** | `number` | _Optional_ | Height of the section, specified as the number of rows it should span vertically, e.g. `2`. Defaults to `1`. Max is `5`.
+**`rows`** | `number` | _Optional_ | Height of the section, specified as the number of rows it should span vertically, e.g. `2`. Defaults to `1`. Max is `5`. Applies to the default `auto` layout; ignored by `masonry` (where heights follow content) and the flex-based `horizontal`/`vertical` layouts.
 **`cols`** | `number` | _Optional_ | Width of the section, specified as the number of columns the section should span horizontally, e.g. `2`. Defaults to `1`. Max is `5`. Will be clamped to the page's active column count so that a section never exceeds the available grid width.
 **`itemSize`** | `string` | _Optional_ | Specify the size for items within this group, either `small`, `medium` or `large`. Note that this will override any settings specified through the UI
 **`color`** | `string` | _Optional_ | A custom accent color for the section, as a hex code or HTML color (e.g. `#fff`)
 **`customStyles`** | `string` | _Optional_ | Custom CSS properties that should be applied to that section, e.g. `border: 2px dashed #ff0000;`
-**`sectionLayout`** | `string` | _Optional_ | Specify which CSS layout will be used to responsively place items. Can be either `auto` (which uses flex layout), or `grid`. If `grid` is selected, then `itemCountX` and `itemCountY` may also be set. Defaults to `auto`
-**`itemCountX`** | `number` | _Optional_ | The number of items to display per row / horizontally. If not set, it will be calculated automatically based on available space. Can only be set if `sectionLayout` is set to `grid`. Must be a whole number between `1` and `12`
-**`itemCountY`** | `number` | _Optional_ | The number of items to display per column / vertically. If not set, it will be calculated automatically based on available space. If `itemCountX` is set, then `itemCountY` can be calculated automatically. Can only be set if `sectionLayout` is set to `grid`. Must be a whole number between `1` and `12`
+**`sectionLayout`** | `string` | _Optional_ | Specify which CSS layout will be used to responsively place items. Can be either `auto` (which uses flex layout), or `grid`. Defaults to `auto`. Setting `itemCountX` or `itemCountY` below will also switch the section to grid layout automatically
+**`itemCountX`** | `number` | _Optional_ | Number of items per row / horizontally. If not set, it will be calculated automatically based on available space. Setting this switches the section to grid layout. Must be a whole number between `1` and `12`; values above `8` rely on the grid's responsive column sizing (no explicit minimum-width rule)
+**`itemCountY`** | `number` | _Optional_ | Number of explicit rows before items flow into implicit rows. Setting this switches the section to grid layout. Must be a whole number between `1` and `12`. Row heights size to their content (section heights follow content in the masonry layout)
 **`hideForUsers`** | `string[]` | _Optional_ | Current section will be visible to all users, except for those specified in this list
 **`showForUsers`** | `string[]` | _Optional_ | Current section will be hidden from all users, except for those specified in this list
 **`hideForGuests`** | `boolean` | _Optional_ | Current section will be visible for logged in users, but not for guests (see `appConfig.enableGuestAccess`). Defaults to `false`
-**`hideForKeycloakUsers`** | `object`  | _Optional_ | Current section will be visible to all keycloak users, except for those configured via these groups and roles. See `hideForKeycloakUsers`
-**`showForKeycloakUsers`** | `object`  | _Optional_ | Current section will be hidden from all keycloak users, except for those configured via these groups and roles. See `showForKeycloakUsers`
+**`hideForGroups`** | `string[]` | _Optional_ | Current section will be visible to all users, except for those in any of these SSO groups. See [Group and Role Controls](#showforgroups-hideforgroups-showforroles-and-hideforroles)
+**`showForGroups`** | `string[]` | _Optional_ | Current section will be hidden from all users, except for those in one or more of these SSO groups
+**`hideForRoles`** | `string[]` | _Optional_ | Current section will be visible to all users, except for those with any of these SSO roles
+**`showForRoles`** | `string[]` | _Optional_ | Current section will be hidden from all users, except for those with one or more of these SSO roles
 **`hideFromWorkspace`** | `boolean` | _Optional_ | Current section will be visible in the default view but not in the Workspace view sidebar. Defaults to `false`
 
 **[⬆️ Back to Top](#configuring)**
@@ -336,12 +353,29 @@ For more info, see the **[Authentication Docs](/docs/authentication.md)**
 
 **[⬆️ Back to Top](#configuring)**
 
-## `section.displayData.hideForKeycloakUsers`, `section.displayData.showForKeycloakUsers`, `item.displayData.hideForKeycloakUsers` and `item.displayData.showForKeycloakUsers`
+## `showForGroups`, `hideForGroups`, `showForRoles` and `hideForRoles`
+
+When using an SSO provider (Keycloak, or any OIDC provider that includes `groups` / `roles` claims in the id_token), pages, sections and items can be shown or hidden based on the user's groups and roles. Set any of these under the `displayData` of a page, section or item:
 
 **Field** | **Type**   | **Required**| **Description**
 --- |------------| --- | ---
-**`groups`** | `string[]` | _Optional_ | Current Section or Item will be hidden or shown based on the user having any of the groups in this list
-**`roles`** | `string[]` | _Optional_ | Current Section or Item will be hidden or shown based on the user having any of the roles in this list
+**`showForGroups`** | `string[]` | _Optional_ | Hidden from all users, except those in one or more of these groups
+**`hideForGroups`** | `string[]` | _Optional_ | Hidden from users in any of these groups
+**`showForRoles`** | `string[]` | _Optional_ | Hidden from all users, except those with one or more of these roles
+**`hideForRoles`** | `string[]` | _Optional_ | Hidden from users with any of these roles
+
+For example:
+
+```yaml
+sections:
+  - name: Admin Tools
+    displayData:
+      showForGroups: [admins]
+    items:
+      - title: Hidden from interns
+        displayData:
+          hideForGroups: [interns]
+```
 
 **[⬆️ Back to Top](#configuring)**
 

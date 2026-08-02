@@ -7,7 +7,7 @@
 import { describe, it, expect } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import yaml from 'js-yaml';
+import * as yaml from 'js-yaml';
 
 describe('Smoke Tests - Testing Infrastructure', () => {
   it('should run a basic test', () => {
@@ -109,7 +109,7 @@ describe('Smoke Tests - Core Dependencies', () => {
   });
 
   it('should have config schema file', () => {
-    const schemaPath = path.resolve(__dirname, '../../src/utils/ConfigSchema.json');
+    const schemaPath = path.resolve(__dirname, '../../src/utils/config/ConfigSchema.json');
     expect(fs.existsSync(schemaPath)).toBe(true);
   });
 });

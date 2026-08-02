@@ -1,8 +1,36 @@
 // @vitest-environment node
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 
+// Isolate from the repo's conf.yml so test behaviour doesn't depend on which
+// auth method (if any) the developer has configured locally.
+const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'dashy-general-test-'));
+fs.writeFileSync(path.join(tmpDir, 'conf.yml'), 'pageInfo:\n  title: Test\nsections: []\n');
+process.env.USER_DATA_DIR = tmpDir;
+
 const app = require('../../services/app');
+
+describe('Healthcheck', () => {
+  it('GET /healthz returns 200 with status, uptime and version', async () => {
+    const res = await request(app).get('/healthz');
+    expect(res.status).toBe(200);
+    expect(res.headers['cache-control']).toBe('no-store');
+    const body = JSON.parse(res.text);
+    expect(body.status).toBe('ok');
+    expect(typeof body.uptime).toBe('number');
+    expect(body.uptime).toBeGreaterThanOrEqual(0);
+    expect(typeof body.version).toBe('string');
+  });
+
+  it('ignores POST', async () => {
+    const res = await request(app).post('/healthz');
+    expect(res.status).toBeLessThan(500);
+    expect(res.status).not.toBe(200);
+  });
+});
 
 describe('Config serving', () => {
   it('GET /conf.yml returns the config', async () => {
@@ -39,13 +67,6 @@ describe('Get user', () => {
     const res = await request(app).get('/get-user');
     expect(res.status).toBe(200);
     expect(typeof JSON.parse(res.text)).toBe('object');
-  });
-});
-
-describe('Rebuild', () => {
-  it('ignores POST', async () => {
-    const res = await request(app).post('/config-manager/rebuild');
-    expect(res.status).toBeLessThan(500);
   });
 });
 

@@ -34,7 +34,7 @@
       <i class="fal fa-database"></i>
       <strong>{{ server.server.database.type }}</strong>
       <em>{{ server.server.database.version }}</em> <small>{{ tt('using') }}</small>
-      <em v-html="convertBytes(server.server.database.size)"></em>
+      <em v-html="safeHtmlConvertBytes(server.server.database.size)"></em>
     </p>
     <hr/>
   </div>
@@ -57,6 +57,7 @@ export default {
   components: { GaugeChart },
   data() {
     return {
+      overrideProxyChoice: true,
       server: {
         server: {
           database: {
@@ -151,8 +152,8 @@ export default {
     },
     getMemoryGaugeLabel() {
       const sys = this.server.nextcloud.system;
-      return `${this.convertBytes((sys.mem_total - sys.mem_free) * 1024, 2, false)} / `
-           + `${this.convertBytes(sys.mem_total * 1024, 2, false)}`;
+      return `${this.safeHtmlConvertBytes((sys.mem_total - sys.mem_free) * 1024, 2, false)} / `
+           + `${this.safeHtmlConvertBytes(sys.mem_total * 1024, 2, false)}`;
     },
     updateCpuLoad(load) {
       const chartData = {

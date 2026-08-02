@@ -44,7 +44,6 @@
     "edit-css-button": "Rediger tilpasset CSS",
     "cloud-sync-button": "Aktiver Cloud Sync",
     "edit-cloud-sync-button": "Aktiver Cloud Sync",
-    "rebuild-app-button": "Genopbyg applikation",
     "change-language-button": "Skift app-sprog",
     "reset-settings-button": "Nulstil lokale indstillinger",
     "app-info-button": "App Info",
@@ -53,8 +52,6 @@
     "reset-config-msg-l2": "Du bør først sikkerhedskopiere eventuelle ændringer, du har foretaget lokalt, hvis du vil bruge dem i fremtiden.",
     "reset-config-msg-l3": "Er du sikker på at du vil fortsætte?",
     "data-cleared-msg": "Data blev succesfuldt ryddet",
-    "actions-label": "Handlinger",
-    "copy-config-label": "Kopiere Config",
     "data-copied-msg": "Konfigurationen er blevet kopieret til clipboard",
     "reset-config-label": "Nulstil konfiguration",
     "css-save-btn": "Gem ændringer",
@@ -75,26 +72,26 @@
     "layout-auto": "Auto",
     "layout-horizontal": "Vandret",
     "layout-vertical": "Lodret",
-    "item-size-label": "Varestørrelse",
-    "item-size-small": "Small",
-    "item-size-medium": "Medium",
-    "item-size-large": "Large",
+    "item-size-label": "Label størrelse",
+    "item-size-small": "Lille",
+    "item-size-medium": "Mellem",
+    "item-size-large": "Stor",
     "config-launcher-label": "Konfiguration",
     "config-launcher-tooltip": "Opdater konfiguration",
     "sign-out-tooltip": "Log ud",
-    "sign-in-tooltip": "Log in",
+    "sign-in-tooltip": "Log ind",
     "sign-in-welcome": "Hej {username}!"
   },
   "updates": {
     "app-version-note": "Dashy version",
-    "up-to-date": "Opdatert",
+    "up-to-date": "Opdateret",
     "out-of-date": "Opdatering tilgængelig",
     "unsupported-version-l1": "Du bruger en ikke-understøttet version af Dashy",
     "unsupported-version-l2": "For den bedste oplevelse og de seneste sikkerhedsrettelser skal du opdatere til"
   },
   "language-switcher": {
     "title": "Skift applikationssprog",
-    "dropdown-label": "Valg en sprog",
+    "dropdown-label": "Vælg sprog",
     "save-button": "Gem",
     "success-msg": "Sprog opdateret til"
   },
@@ -111,38 +108,12 @@
     "reset-toast": "Tilpassede farver for {theme} fjernet"
   },
   "config-editor": {
-    "save-location-label": "Lokation for gem",
-    "location-local-label": "Gem lokalt",
-    "location-disk-label": "Skriv ændringer til konfigurationsfil",
-    "save-button": "Gem ændringer",
     "preview-button": "Forhåndsvisning af ændringer",
     "valid-label": "Konfigurationen er gyldig",
-    "status-success-msg": "Opgave fuldført",
-    "status-fail-msg": "Opgave mislykkedes",
     "success-msg-disk": "Konfigurationsfilen er skrevet til disken",
     "success-msg-local": "Lokale ændringer blev gemt",
-    "success-note-l1": "Appen skal genopbygges automatisk.",
-    "success-note-l2": "Dette kan tage op til et minut.",
-    "success-note-l3": "Du skal opdatere siden for at ændringerne træder i kraft.",
-    "error-msg-save-mode": "Vælg venligst en gemtilstand: Lokal eller Fil",
     "error-msg-cannot-save": "Der opstod en fejl under lagring af konfiguration",
-    "error-msg-bad-json": "Fejl i JSON, muligvis forkert udformet",
-    "warning-msg-validation": "Valideringsadvarsel",
     "not-admin-note": "Du kan ikke skrive ændringer til disk, fordi du ikke er logget ind som admin"
-  },
-  "app-rebuild": {
-    "title": "Genopbyg applikation",
-    "rebuild-note-l1": "En genopbygning er påkrævet, for at ændringer skrevet til conf.yml-filen kan træde i kraft.",
-    "rebuild-note-l2": "Dette skulle ske automatisk, men hvis det ikke er tilfældet, kan du manuelt udløse det her.",
-    "rebuild-note-l3": "Dette er ikke nødvendigt for ændringer, der er gemt lokalt.",
-    "rebuild-button": "Start byg",
-    "rebuilding-status-1": "Bygger...",
-    "rebuilding-status-2": "Dette kan tage et par minutter",
-    "error-permission": "Du har ikke tilladelse til at udløse denne handling",
-    "success-msg": "Byg fuldført med succes",
-    "fail-msg": "Byggehandling mislykkedes",
-    "reload-note": "Der kræves nu en genindlæsning af siden, for at ændringer kan træde i kraft",
-    "reload-button": "Genindlæs siden"
   },
   "cloud-sync": {
     "title": "Cloud sikkerhedskopiering og gendannelse",
@@ -150,7 +121,6 @@
     "intro-l2": "Alle data er fuldstændigt end-to-end krypteret med AES, ved at bruge din adgangskode som nøglen.",
     "intro-l3": "For mere information, se venligst",
     "backup-title-setup": "Lav en sikkerhedskopi",
-    "backup-title-update": "Opdater sikkerhedskopiering",
     "password-label-setup": "Vælg et kodeord",
     "password-label-update": "Skriv dit kodeord",
     "backup-button-setup": "Sikkerhedskopiering",
@@ -166,17 +136,6 @@
     "backup-error-password": "Forkert kodeord. Indtast venligst din nuværende adgangskode.",
     "backup-success-msg": "Afsluttet med succes",
     "restore-success-msg": "Konfiguration gendannet med succes"
-  },
-  "menu": {
-    "open-section-title": "Åbn i",
-    "sametab": "Aktuel fane",
-    "newtab": "Ny fane",
-    "modal": "Pop-Up Modal",
-    "workspace": "Arbejdsrumsvisning",
-    "options-section-title": "Muligheder",
-    "edit-item": "Rediger",
-    "move-item": "Kopier eller flyt",
-    "remove-item": "Fjern"
   },
   "context-menus": {
     "item": {
@@ -196,8 +155,7 @@
       "open-section": "Åbn sektion",
       "edit-section": "Rediger",
       "expand-collapse": "Udvid / Skjul",
-      "move-section": "Flytte til",
-      "remove-section": "Fjerne"
+      "remove-section": "Slet sektion"
     }
   },
   "interactive-editor": {
@@ -231,7 +189,7 @@
       "save-locally-warning": "Hvis du fortsætter, vil ændringer kun blive gemt i din browser. Du bør eksportere en kopi af din konfiguration til brug på andre maskiner. Vil du fortsætte?"
     },
     "edit-item": {
-      "missing-title-err": "En varetitel er påkrævet"
+      "missing-title-err": "En titel er påkrævet"
     },
     "edit-section": {
       "edit-section-title": "Rediger sektion",
@@ -247,17 +205,14 @@
       "warning-msg-l3": "for at undgå utilsigtede konsekvenser."
     },
     "export": {
-      "export-title": "Eksporter konfiguration",
       "copy-clipboard-btn": "Kopier til udklipsholder",
       "copy-clipboard-tooltip": "Kopier alle app-konfigurationer til systemets udklipsholder i YAML-format",
       "download-file-btn": "Download som fil",
-      "download-file-tooltip": "Download alle appkonfigurationer til din enhed i en YAML-fil",
-      "view-title": "Se konfiguration"
+      "download-file-tooltip": "Download alle appkonfigurationer til din enhed i en YAML-fil"
     }
   },
   "widgets": {
     "general": {
-      "loading": "Indlæser...",
       "show-more": "Udvid detaljer",
       "show-less": "Vis mindre",
       "open-link": "Fortsæt med at læse"
@@ -270,9 +225,9 @@
       "down": "Offline"
     },
     "net-data": {
-      "cpu-chart-title": "CPU-historie",
+      "cpu-chart-title": "CPU-historik",
       "mem-chart-title": "Hukommelsesbrug",
-      "mem-breakdown-title": "Hukommelsesnedbrydning",
+      "mem-breakdown-title": "Udnyttelse af hukommelse",
       "load-chart-title": "Systemindlæsning"
     },
     "glances": {
@@ -285,7 +240,7 @@
       "system-load-desc": "Antal processer, der venter i køen, beregnet i gennemsnit på tværs af alle kerner"
     },
     "system-info": {
-      "uptime": "Uptime"
+      "uptime": "Oppetid"
     },
     "flight-data": {
       "arrivals": "Ankomster",
@@ -296,13 +251,9 @@
       "good-service-rest": "God service på alle andre linjer"
     },
     "synology-download": {
-      "download": "Download",
-      "upload": "Upload",
-      "downloaded": "Downloaded",
-      "uploaded": "Uploaded",
-      "remaining": "Tilbage",
-      "up": "Op",
-      "down": "Ned"
+      "downloaded": "Downloadet",
+      "uploaded": "Uploadet",
+      "remaining": "Tilbage"
     },
     "gluetun-status": {
       "vpn-ip": "VPN IP",
@@ -319,16 +270,16 @@
       "and": "og",
       "applications": "applikationer",
       "available": "ledig",
-      "away": "Væk",
+      "away": "væk",
       "cache-full": "CACHE FULL",
       "chat-room": "chattrum",
       "delete-all": "Slet alt",
       "delete-notification": "Slet notifikation",
       "disabled": "avaktivert",
-      "disk-quota": "Diskkvot",
-      "disk-space": "Diskudrymme",
+      "disk-quota": "Disk kvota",
+      "disk-space": "Disk-plads",
       "dnd": "Forstyr ikke",
-      "email": "email",
+      "email": "e-mail",
       "enabled": "aktiveret",
       "federated-shares-ucfirst": "Fødereret deler",
       "federated-shares": "fødereret deler",
@@ -336,7 +287,7 @@
       "free": "fri",
       "groups": "grupper",
       "hit-rate": "træffefrekvens",
-      "hits": "træffe",
+      "hits": "besøg",
       "home": "hjem",
       "in": "in",
       "keys": "keys",

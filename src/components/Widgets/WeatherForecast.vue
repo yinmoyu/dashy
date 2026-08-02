@@ -33,7 +33,7 @@
 <script>
 import WidgetMixin from '@/mixins/WidgetMixin';
 import { capitalize } from '@/utils/MiscHelpers';
-import { widgetApiEndpoints } from '@/utils/defaults';
+import { widgetApiEndpoints } from '@/utils/config/defaults';
 
 export default {
   mixins: [WidgetMixin],
@@ -57,9 +57,17 @@ export default {
     },
     endpoint() {
       const apiKey = this.parseAsEnvVar(this.options.apiKey);
-      const { city } = this.options;
+      const { city, cityId, lat, lon } = this.options;
       const cnt = this.numDays * 8; // API returns 3-hourly entries; request enough to cover numDays
-      const params = `?q=${city}&cnt=${cnt}&units=${this.units}&appid=${apiKey}`;
+      let locationParams;
+      if (lat && lon) {
+        locationParams = `lat=${lat}&lon=${lon}`;
+      } else if (cityId) {
+        locationParams = `id=${cityId}`;
+      } else {
+        locationParams = `q=${city}`;
+      }
+      const params = `?${locationParams}&cnt=${cnt}&units=${this.units}&appid=${apiKey}`;
       return `${widgetApiEndpoints.weatherForecast}${params}`;
     },
     tempDisplayUnits() {
@@ -143,13 +151,15 @@ export default {
     /* Display weather description and Click for more note on hover */
     tooltip(text) {
       const content = `${text ? capitalize(text) : ''}\nClick for more Info`;
-      return { content, trigger: 'hover focus', delay: 250 };
+      return { content };
     },
     /* Validate input props, and print warning if incorrect */
     checkProps() {
       const ops = this.options;
       if (!ops.apiKey) this.error('Missing API key for OpenWeatherMap');
-      if (!ops.city) this.error('A city name is required to fetch weather');
+      if (!ops.city && !ops.cityId && !(ops.lat && ops.lon)) {
+        this.error('A city name, city ID or lat + lon is required to fetch weather');
+      }
       if (ops.units && ops.units !== 'metric' && ops.units !== 'imperial') {
         this.error('Invalid units specified, must be either \'metric\' or \'imperial\'');
       }

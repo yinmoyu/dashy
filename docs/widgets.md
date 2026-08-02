@@ -24,6 +24,7 @@ Dashy has support for displaying dynamic content in the form of widgets. There a
   - [Public Holidays](#public-holidays)
   - [Covid-19 Status](#covid-19-status)
   - [Sports Scores](#sports-scores)
+  - [Live Tennis](#live-tennis)
   - [News Headlines](#news-headlines)
   - [TFL Status](#tfl-status)
   - [Stock Price History](#stock-price-history)
@@ -44,7 +45,6 @@ Dashy has support for displaying dynamic content in the form of widgets. There a
   - [Minecraft Server](#minecraft-server)
 - **[Self-Hosted Services Widgets](#self-hosted-services-widgets)**
   - [System Info](#system-info)
-  - [Cron Monitoring](#cron-monitoring-health-checks)
   - [CPU History](#cpu-history-netdata)
   - [Memory History](#memory-history-netdata)
   - [System Load History](#load-history-netdata)
@@ -66,6 +66,7 @@ Dashy has support for displaying dynamic content in the form of widgets. There a
   - [Nextcloud System](#nextcloud-system)
   - [Nextcloud Stats](#nextcloud-stats)
   - [Nextcloud PHP OPcache](#nextcloud-php-opcache-stats)
+  - [Ntfy stream](#ntfy-stream)
   - [Proxmox lists](#proxmox-lists)
   - [Sabnzbd](#sabnzbd)
   - [Gluetun VPN Info](#gluetun-vpn-info)
@@ -90,6 +91,7 @@ Dashy has support for displaying dynamic content in the form of widgets. There a
   - [Resource Usage Alerts](#resource-usage-alerts)
   - [Public & Private IP](#ip-address)
   - [CPU Temperature](#cpu-temp)
+  - [GPU](#gpu)
   - [Compact Metrics](#compact-metrics)
 - **[Dynamic Widgets](#dynamic-widgets)**
   - [Iframe Widget](#iframe-widget)
@@ -160,10 +162,11 @@ A simple, live-updating local weather component, showing temperature, conditions
 --- | --- | --- | ---
 **`apiKey`** | `string` |  Required | Your OpenWeatherMap API key. You can get one for free at [openweathermap.org](https://openweathermap.org/)
 **`city`** | `string` | Required | A city name to use for fetching weather. This can also be a state code or country code, following the ISO-3166 format
+**`cityId`** | `number` |  _Optional_ | An OpenWeatherMap numeric city ID, used to disambiguate cities that share a name. You can find the ID in the URL of the city's page on [openweathermap.org](https://openweathermap.org/) (e.g. `2643743` for London, GB). If provided, this will override the `city` option
 **`units`** | `string` |  _Optional_ | The units to use for displaying data, can be either `metric` or `imperial`. Defaults to `metric`
 **`hideDetails`** | `boolean` |  _Optional_ | If set to `true`, the additional details (wind, humidity, pressure, etc) will not be shown. Defaults to `false`
-**`lat`** | `number` |  _Optional_ | To show weather for a specific location, you can provide the latitude and longitude coordinates. If provided, this will override the `city` option
-**`lon`** | `number` |  _Optional_ | To show weather for a specific location, you can provide the latitude and longitude coordinates. If provided, this will override the `city` option
+**`lat`** | `number` |  _Optional_ | To show weather for a specific location, you can provide the latitude and longitude coordinates. If provided, this will override the `city` and `cityId` options
+**`lon`** | `number` |  _Optional_ | To show weather for a specific location, you can provide the latitude and longitude coordinates. If provided, this will override the `city` and `cityId` options
 
 #### Example
 
@@ -197,6 +200,9 @@ Displays the weather (temperature and conditions) for the next few days for a gi
 --- | --- | --- | ---
 **`apiKey`** | `string` |  Required | Your OpenWeatherMap API key. You can get one at [openweathermap.org](https://openweathermap.org/) or for free via the [OWM Student Plan](https://home.openweathermap.org/students)
 **`city`** | `string` | Required | A city name to use for fetching weather. This can also be a state code or country code, following the ISO-3166 format
+**`cityId`** | `number` |  _Optional_ | An OpenWeatherMap numeric city ID, used to disambiguate cities that share a name. You can find the ID in the URL of the city's page on [openweathermap.org](https://openweathermap.org/) (e.g. `2643743` for London, GB). If provided, this will override the `city` option
+**`lat`** | `number` |  _Optional_ | Latitude for a specific location. If provided alongside `lon`, this will override the `city` and `cityId` options
+**`lon`** | `number` |  _Optional_ | Longitude for a specific location. If provided alongside `lat`, this will override the `city` and `cityId` options
 **`numDays`** | `number` |  _Optional_ | The number of days to display of forecast info to display. Defaults to `4`, max `16` days
 **`units`** | `string` |  _Optional_ | The units to use for displaying data, can be either `metric` or `imperial`. Defaults to `metric`
 **`hideDetails`** | `boolean` |  _Optional_ | If set to `true`, the additional details (wind, humidity, pressure, etc) will not be shown. Defaults to `false`
@@ -618,7 +624,7 @@ This widget display email addresses / aliases from addy.io. Click an email addre
 
 **Field** | **Type** | **Required** | **Description**
 --- | --- | --- | ---
-**`apiKey`** | `string` |  Required | Your addy.io API Key / Personal Access Token. You can generate this under [Account Settings](https://app.addy.io/settings)
+**`apiKey`** | `string` |  Required | Your addy.io API Key / Personal Access Token. You can generate this under [API Settings](https://app.addy.io/settings/api)
 **`hostname`** | `string` |  _Optional_ | If your self-hosting addy.io, then supply the host name. By default it will use the public hosted instance
 **`apiVersion`** | `string` |  _Optional_ | If you're using an API version that is not version `v1`, then specify it here
 **`limit`** | `number` |  _Optional_ | Limit the number of emails shown per page. Defaults to `10`
@@ -631,7 +637,7 @@ This widget display email addresses / aliases from addy.io. Click an email addre
 #### Example
 
 ```yaml
-  - type: anonaddy
+  - type: addy
     options:
       apiKey: "xxxxxxxxxxxxxxxxxxxxxxxx\
         xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\
@@ -653,10 +659,7 @@ This widget display email addresses / aliases from addy.io. Click an email addre
 
 ### Vulnerability Feed
 
-Keep track of recent security advisories and vulnerabilities, with optional filtering by score, exploits, vendor and product. All fields are optional.
-
-Sources from: https://services.nvd.nist.gov/rest/json/cves/2.0
-Docs: https://nvd.nist.gov/developers/vulnerabilities
+Keep track of recent security advisories and vulnerabilities, with optional filtering by score, exploits, vendor and product. Using data from [NIST Vulnerability API](https://nvd.nist.gov/developers/vulnerabilities). All fields are optional.
 
 <p align="center"><img width="400" src="https://pixelflare.cc/alicia/dashy/cve" /></p>
 
@@ -670,6 +673,7 @@ Docs: https://nvd.nist.gov/developers/vulnerabilities
 **`cvssV3Severity`** | `string` |  _Optional_ | This parameter returns only the CVEs that match the provided CVSSv3 qualitative severity rating. Options are **LOW**, **MEDIUM**, **HIGH** or **CRITICAL**
 **`cvssV4Severity`** | `string` |  _Optional_ | This parameter returns only the CVEs that match the provided CVSSv4 qualitative severity rating. Options are **LOW**, **MEDIUM**, **HIGH** or **CRITICAL**
 **`keywordSearch`** | `string` |  _Optional_ | This parameter returns only the CVEs where a word or phrase is found in the current description
+**`apiKey`** | `string` |  _Optional_ | Without a key you're limited to 5 requests every 30 seconds. You can get a free API key from [here](https://nvd.nist.gov/developers/request-an-api-key)
 
 #### Example
 
@@ -690,7 +694,7 @@ or
 #### Info
 
 - **CORS**: 🟠 Proxied
-- **Auth**: 🟢 Not Required
+- **Auth**: 🟢 Not Required (free apiKey recommended for multiple widgets)
 - **Price**: 🟢 Free
 - **Host**: Managed
 - **Privacy**: _See [CVE Details Privacy Policy](https://www.cvedetails.com/privacy.php)_
@@ -854,6 +858,53 @@ Show recent scores and upcoming matches from your favorite sports team. Data is 
 - **Price**: 🟠 Free plan (up to 30 requests / minute, limited endpoints)
 - **Host**: Managed Instance Only
 - **Privacy**: ⚫ No Policy Available
+
+---
+
+### Live Tennis
+
+Live tennis scores from the ATP and WTA tours, updating in place. Each match shows both players with their per-set game scores, the current game points, and a marker against whoever is serving. Set the `status` option to show upcoming or recently finished matches instead. Data is from [LiveTennisAPI](https://livetennisapi.com/).
+
+<p align="center"><img width="400" src="https://pixelflare.cc/alicia/dashy/tennis-scores" /></p>
+
+#### Options
+
+**Field** | **Type** | **Required** | **Description**
+--- | --- | --- | ---
+**`apiKey`** | `string` | Required | Your LiveTennisAPI key. The [free plan](https://livetennisapi.com/subscribe/free) needs no card, and is enough for this widget
+**`status`** | `string` | _Optional_ | Which matches to show: `live`, `upcoming` or `completed`. Defaults to `live`
+**`limit`** | `number` | _Optional_ | Maximum number of matches to show, defaults to `5`
+**`hideRankings`** | `boolean` | _Optional_ | Set to `true` to hide each player's world ranking, defaults to `false`
+**`hideTournament`** | `boolean` | _Optional_ | Set to `true` to hide the tournament name, defaults to `false`
+
+#### Example
+
+```yaml
+- type: live-tennis
+  options:
+    apiKey: twjp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    limit: 5
+```
+
+Showing the next matches due on court, instead of those in play:
+
+```yaml
+- type: live-tennis
+  options:
+    apiKey: twjp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    status: upcoming
+    hideRankings: true
+```
+
+#### Info
+
+- **CORS**: 🟢 Enabled (no proxy needed)
+- **Auth**: 🔴 Required
+- **Price**: 🟠 Free plan (30 requests / minute)
+- **Host**: Managed Instance Only
+- **Privacy**: [LiveTennisAPI Privacy Policy](https://livetennisapi.com/privacy)
+
+The widget refreshes every 60 seconds by default, which sits comfortably inside the free plan's rate limit. You can change this with the standard `updateInterval` option, but note that several widgets sharing one key all count against the same limit.
 
 ---
 
@@ -1186,57 +1237,73 @@ Displays currently trending projects on GitHub. Optionally specify a language an
 
 ### GitHub Profile Stats
 
-Display stats from your GitHub profile, using embedded cards from [anuraghazra/github-readme-stats](https://github.com/anuraghazra/github-readme-stats)
+Shows GitHub user stats (if `username`) and repos stats (for each repo in `repos`). Fetched from the GitHub API.
 
-<p align="center"><img width="380" src="https://pixelflare.cc/alicia/dashy/github-stats" /></p>
+<p align="center"><img width="600" src="https://pixelflare.cc/alicia/dashy/github-stats-widget" /></p>
 
 #### Options
 
 **Field** | **Type** | **Required** | **Description**
 --- | --- | --- | ---
-**`username`** | `string` |  Required | The GitHub username to fetch info for. E.g. `lissy93`. (Not required if `hideProfileCard` and `hideLanguagesCard` are both set to `true`)
-**`hideProfileCard`** | `boolean` |  _Optional_ | If set to `true`, the users profile card will not be shown. Defaults to `false`
-**`hideLanguagesCard`** | `boolean` |  _Optional_ | If set to `true`, the users top languages card will not be shown. Defaults to `false`
-**`repos`** | `array` |  _Optional_ | If you'd like to also display stats for some GitHub repositories, then add an array or repo names here. Specified as `[username]/[repo-name]`, e.g. `lissy93/dashy`
+**`username`** | `string` |  _Optional_ | A GitHub username, e.g. `lissy93`. If this is set, a profile card is shown, if it's unset the card isn't shown
+**`repos`** | `array` |  _Optional_ | A list of repositories to show stats for, each specified as `[owner]/[repo]`, e.g. `lissy93/dashy`
+**`token`** | `string` |  _Optional_ | An optional [GitHub token](https://github.com/settings/tokens). Used to raise the API rate limit from 60 to 5,000 requests per hour (can be set directly, or as an environment variable)
 
 #### Example
 
 ```yaml
 - type: github-profile-stats
   options:
-    username: Lissy93
-    hideLanguagesCard: true
+    username: lissy93
     repos:
     - lissy93/dashy
-    - lissy93/personal-security-checklist
-    - lissy93/twitter-sentiment-visualisation
+    - lissy93/portainer-templates
+    - lissy93/web-check
 ```
+
+Or just show the user's profile card:
+```yaml
+- type: github-profile-stats
+  options:
+    username: octocat
+```
+
+Or just show repo(s)
+```yaml
+- type: github-profile-stats
+  options:
+    repos:
+    - lissy93/dashy
+```
+
 
 #### Info
 
 - **CORS**: 🟢 Enabled
-- **Auth**: 🟢 Not Required
+- **Auth**: 🟡 Optional (a `token` raises the rate limit)
 - **Price**: 🟢 Free
-- **Host**: Managed Instance or Self-Hosted (see [anuraghazra/github-readme-stats](https://github.com/anuraghazra/github-readme-stats))
+- **Host**: GitHub ([docs.github.com/en/rest](https://docs.github.com/en/rest))
 - **Privacy**: _See [GitHub's Privacy Policy](https://docs.github.com/en/github/site-policy/github-privacy-statement)_
 
 ---
 
 ### HealthChecks Status
 
-Display status of one or more HealthChecks project(s). Works with healthchecks.io and your selfhosted instance.
+Display cron job monitor status of one or more HealthChecks project(s). Works with healthchecks.io and your selfhosted instance.
 
-<p align="center"><img width="380" src="https://pixelflare.cc/alicia/dashy/healthchecks" /></p>
+<p align="center"><img width="400" src="https://pixelflare.cc/alicia/dashy/cron-monitor" /></p>
 
 #### Options
 
 **Field** | **Type** | **Required** | **Description**
 --- | --- | --- | ---
 **`host`** | `string` |  Optional | The base url of your instance, default is `https://healthchecks.io`
-**`apiKey`** | `string` or `array` |  Required | One or more API keys for your healthcheck projects. (Read-only works fine)
+**`apiKey`** | `string` (or `string[]` for multiple) |  Required | API key(s) for project(s) to monitor. Generate a separate key per project (read-only is fine), under Project --> Settings --> API Access
+
+##### Example
 
 ```yaml
-- type: HealthChecks
+- type: health-checks
   options:
     host: https://healthcheck.your-domain.de
     apiKey: 
@@ -1244,9 +1311,17 @@ Display status of one or more HealthChecks project(s). Works with healthchecks.i
       - zxywvu...
 ```
 
+Or, a single project:
+```yaml
+      - type: health-checks
+        options:
+          host: https://healthchecks.io
+          apiKey: hcw_xxxxxxxxxxxxxxxxxxxxxxxx
+```
+
 #### Info
 
-- **CORS**: 🟢 Enabled
+- **CORS**: 🟠 Proxied
 - **Auth**: 🟢 Required
 - **Price**: 🟢 Free / Paid / Self-hosted 
 - **Host**: Managed Instance or Self-Hosted (see [healthchecks/healthchecks](https://github.com/healthchecks/healthchecks))
@@ -1658,37 +1733,6 @@ Note that this widget is not available if you are running Dashy in a container o
 
 ---
 
-### Cron Monitoring (Health Checks)
-
-Cron job monitoring using [Health Checks](https://github.com/healthchecks/healthchecks). Both managed and self-hosted instances are supported.
-
-<p align="center"><img width="400" src="https://pixelflare.cc/alicia/dashy/cron-monitor" /></p>
-
-#### Options
-
-**Field** | **Type** | **Required** | **Description**
---- | --- | --- | ---
-**`apiKey`** | `string` |  Required | A read-only API key for the project to monitor. You can generate this by selecting a Project --> Settings --> API Access. Note that you must generate a separate key for each project
-**`host`** | `string` | _Optional_ | If you're self-hosting, or using any instance other than the official (healthchecks.io), you will need to specify the host address. E.g. `https://healthchecks.example.com` or `http://cron-monitoing.local`
-
-#### Example
-
-```yaml
-- type: health-checks
-  options:
-    apiKey: XXXXXXXXX
-```
-
-#### Info
-
-- **CORS**: 🟢 Enabled
-- **Auth**: 🔴 Required
-- **Price**: 🟠 Free plan (up to 20 services, or self-host for unlimited)
-- **Host**: Managed Instance or Self-Hosted (see [GitHub - HealthChecks](https://github.com/healthchecks/healthchecks))
-- **Privacy**: _See [Health-Checks Privacy Policy](https://healthchecks.io/privacy/)_
-
----
-
 ### CPU History (NetData)
 
 Pull recent CPU usage history from NetData.
@@ -1809,17 +1853,7 @@ Displays the number of queries blocked by [Pi-Hole](https://pi-hole.net/).
 ```
 
 > [!TIP]
-> In order to avoid leaking secret data, both `hostname` and `apiKey` can leverage environment variables. Simply pass the name of the variable, which MUST start with `VUE_APP_`.
-
-```yaml
-- type: pi-hole-stats
-  options:
-    hostname: VUE_APP_pihole_ip
-    apiKey: VUE_APP_pihole_key
-```
-
-> [!IMPORTANT]
-> You will need to restart the server (or the docker image) if adding/editing an env var for this to be refreshed.
+> To avoid storing secrets in plaintext, both `hostname` and `apiKey` can be supplied via environment variables. See [Handling Secrets](#handling-secrets).
 
 #### Info
 
@@ -1855,17 +1889,7 @@ Displays the number of queries blocked by [Pi-Hole](https://pi-hole.net/). Use t
 ```
 
 > [!TIP]
-> In order to avoid leaking secret data, both `hostname` and `apiKey` can leverage environment variables. Simply pass the name of the variable, which MUST start with `VUE_APP_`.
-
-```yaml
-- type: pi-hole-stats-v6
-  options:
-    hostname: VUE_APP_pihole_ip
-    apiKey: VUE_APP_pihole_key
-```
-
-> [!IMPORTANT]
-> You will need to restart the server (or the docker image) if adding/editing an env var for this to be refreshed.
+> To avoid storing secrets in plaintext, both `hostname` and `apiKey` can be supplied via environment variables. See [Handling Secrets](#handling-secrets).
 
 #### Info
 
@@ -2300,7 +2324,7 @@ Show user statuses for selected users.
 #### Example
 
 ```yaml
-- type: nextcloud-userstatus
+- type: nextcloud-user-status
   useProxy: true
   options:
     hostname: https://nextcloud.example.com
@@ -2459,6 +2483,39 @@ Shows statistics about PHP OPcache performance on your Nextcloud server.
 - **Host**: Self-Hosted (see [Nextcloud](https://nextcloud.com))
 - **Privacy**: _See [Nextcloud Privacy Policy](https://nextcloud.com/privacy)_
 
+---
+
+### ntfy stream
+
+Subscribes to topics on a **private** [ntfy](https://docs.ntfy.sh/) server, and shows **new messages** as they arrive.
+
+#### Options
+
+**Field** | **Type** | **Required** | **Description**
+--- | --- | --- | ---
+**`server_url`** | `string` |  Required | The server url
+**`topic`** | `string` |  Required | A topic, or a comma separated list of topics
+**`auth`** | `string` |  optional | An [auth string](https://docs.ntfy.sh/subscribe/api/#authentication). ⚠️ This is sent as query parameter.
+**`title`** | `string` |  optional | A title for the widget.
+
+#### Example
+
+```yaml
+- type: ntfy-stream
+  useProxy: false
+  options:
+    title: NTFY stream
+    server_url: https://myntfy.server.tld
+    topic: alert,warning,mytopic
+```
+
+#### Info
+
+- **CORS**: Disabled
+- **Auth**: Optional
+- **Price**: Free
+- **Host**: [Self-hosted](https://docs.ntfy.sh/install/)
+- **Privacy**: [ntfy Privacy Policy](https://docs.ntfy.sh/privacy/)
 
 ---
 
@@ -2662,7 +2719,7 @@ Displays storage statistics and file listings from a [Filebrowser Quantum](https
   useProxy: true
   options:
     hostname: http://filebrowser.local:8080
-    apiKey: VUE_APP_FILEBROWSER_KEY
+    apiKey: DASHY_FILEBROWSER_KEY
     source: Documents
     path: /
     showRecent: 5
@@ -2678,7 +2735,7 @@ Displays storage statistics and file listings from a [Filebrowser Quantum](https
   useProxy: true
   options:
     hostname: http://filebrowser.local:8080
-    apiKey: VUE_APP_FILEBROWSER_KEY
+    apiKey: DASHY_FILEBROWSER_KEY
     source: Downloads
     showDetailedStats: true
     showRecent: 10
@@ -3194,6 +3251,31 @@ You'll need to enable the sensors plugin to use this widget, using: `--enable-pl
 
 ---
 
+### GPU
+
+Displays usage, memory and temperature for each NVIDIA GPU, plus fan speed where available.
+
+Note: This widget uses the [`gpu`](https://github.com/nicolargo/glances/tree/develop/glances/plugins/gpu) plugin, which requires the `py3nvml` library and is limited to NVIDIA chipsets.
+
+<p align="center"><img width="400" src="https://pixelflare.cc/alicia/dashy/glances-gpu" /></p>
+
+#### Options
+
+**Field** | **Type** | **Required** | **Description**
+--- | --- | --- | ---
+**`units`** | `string` |  _Optional_ | Use `C` to display temperatures in Celsius or `F` to use Fahrenheit. Defaults to `C`.
+
+#### Example
+
+```yaml
+- type: gl-gpu
+  options:
+    hostname: http://192.168.130.2:61208
+    units: C
+```
+
+---
+
 ### Compact Metrics
 
 A multi-system overview widget that displays CPU, memory and disk usage for multiple Glances instances in a compact table. Click on a row to see detailed metrics for that system.
@@ -3303,9 +3385,91 @@ You can also use this widget to display an image, wither locally or from a remot
 
 ### API Response
 
-Directly output plain-text response from any API-enabled service.
+Display data from any HTTP/JSON API endpoint. Fetch a URL, then declaratively map response fields to labelled, formatted values.
+This was very much inspired by, and is broadly compatible with [Homepage's customapi widget](https://gethomepage.dev/widgets/services/customapi/)
 
-// Coming soon...
+#### Options
+
+**Field** | **Type** | **Required** | **Description**
+--- | --- | --- | ---
+**`url`** | `string` | Required | The full URL of the API endpoint to fetch
+**`refreshInterval`** | `number` | _Optional_ | How often to refetch, in milliseconds. Defaults to `10000` (10s). If omitted, the widget-level `updateInterval` (in seconds) is used instead
+**`username`** | `string` | _Optional_ | Username for HTTP basic auth
+**`password`** | `string` | _Optional_ | Password for HTTP basic auth
+**`method`** | `string` | _Optional_ | HTTP method, e.g. `GET` (default) or `POST`
+**`headers`** | `object` | _Optional_ | An object of custom request headers
+**`requestBody`** | `string` or `object` | _Optional_ | Request body for non-GET methods. Prefer an object. A raw string is JSON-encoded again, so don't pre-stringify
+**`display`** | `string` | _Optional_ | Layout for the fields: `block` (default, label and value on one row) or `list` (value stacked under the label)
+**`mappings`** | `array` | _Optional_ | The fields to display from the response (see below). If omitted, the raw response root is shown
+
+Each item in `mappings` accepts:
+
+**Field** | **Type** | **Required** | **Description**
+--- | --- | --- | ---
+**`field`** | `string` | _Optional_ | Dot-path to the value, e.g. `path.to.key` or `items.0.name`. Omit to use the response root (useful with `size`)
+**`label`** | `string` | _Optional_ | Label shown beside the value
+**`format`** | `string` | _Optional_ | One of `text` (default), `number`, `percent`, `bytes`, `bitrate`, `duration`, `date`, `relativeDate` or `size`
+**`scale`** | `number` or `string` | _Optional_ | Multiply the value before formatting. A number or fraction string, e.g. `1024` or `1/16`
+**`prefix`** | `string` | _Optional_ | Text prepended to the formatted value
+**`suffix`** | `string` | _Optional_ | Text appended to the formatted value
+**`remap`** | `array` | _Optional_ | Swap raw values for display text, e.g. `0` → `Down`. Each entry has `value` and `to`; an entry with `any: true` matches everything else
+**`locale`** | `string` | _Optional_ | Locale for `number`/`percent`/`date`/`relativeDate`, e.g. `nl`. Defaults to the browser locale
+**`dateStyle`** | `string` | _Optional_ | For `date` format. One of `full`, `long` (default), `medium`, `short`
+**`timeStyle`** | `string` | _Optional_ | For `date` format. One of `full`, `long`, `medium`, `short`
+**`style`** | `string` | _Optional_ | For `relativeDate` format. One of `long` (default), `short`, `narrow`
+**`numeric`** | `string` | _Optional_ | For `relativeDate` format. One of `always` (default) or `auto`
+**`additionalField`** | `object` | _Optional_ | A secondary value shown next to the main one. Accepts `field`, `format` (and its options), plus `color` - one of `theme`, `adaptive` (action colour from the value's sign: positive green, negative red), `black` or `white`
+
+Notes:
+- **`percent`** treats the value as an already-computed percentage, so `42` is shown as `42%`
+- **`bytes`** and **`bitrate`** auto-select a unit: `1073741824` → `1 GB`, `2500000` → `2.5 Mbps`
+- **`duration`** shows seconds as a compact time: `3665` → `1h 1m`
+- **`scale`** is applied before formatting, useful for unit conversions — e.g. for an API reporting kilobytes, `scale: 1024` with `format: bytes`
+- **`size`** returns the number of items in an array (or keys in an object) — pair it with an omitted `field` to count the response root
+- For APIs that don't send CORS headers (most self-hosted services), set the widget-level `useProxy: true` to route the request through Dashy's server-side proxy
+
+#### Example
+
+```yaml
+- type: customapi
+  options:
+    url: https://api.github.com/repos/lissy93/dashy
+    refreshInterval: 60000
+    mappings:
+      - field: stargazers_count
+        label: Stars
+        format: number
+      - field: open_issues_count
+        label: Open Issues
+        format: number
+      - field: pushed_at
+        label: Last Push
+        format: relativeDate
+```
+
+Or, human-readable disk usage from a [Glances](https://nicolargo.github.io/glances/) instance:
+
+```yaml
+- type: customapi
+  useProxy: true
+  options:
+    url: http://192.168.0.1:61208/api/4/fs
+    mappings:
+      - field: 0.mnt_point
+        label: Mount
+      - field: 0.used
+        label: Used
+        format: bytes
+      - field: 0.percent
+        label: Used %
+        format: percent
+```
+
+#### Info
+
+- **CORS**: 🟠 Depends on target API (use `useProxy: true` if blocked)
+- **Auth**: 🟠 Optional (basic auth or custom headers)
+- **Price**: 🟢 Free
 
 ---
 
@@ -3384,7 +3548,7 @@ Note that if you have many widgets, and set them to continuously update frequent
 
 If a widget fails to make a data request, and the console shows a CORS error, this means the server is blocking client-side requests.
 
-Dashy has a built-in CORS proxy ([`services/cors-proxy.js`](https://github.com/Lissy93/dashy/blob/master/services/cors-proxy.js)), which will be used automatically by some widgets, or can be forced to use by other by setting the `useProxy` option.
+Dashy has a built-in CORS proxy ([`services/endpoints/cors-proxy.js`](https://github.com/Lissy93/dashy/blob/master/services/endpoints/cors-proxy.js)), which will be used automatically by some widgets, or can be forced to use by other by setting the `useProxy` option.
 
 For example:
 
@@ -3407,27 +3571,32 @@ Vary: Origin
 
 ### Handling Secrets
 
-Some widgets require you to pass potentially sensetive info such as API keys. The `conf.yml` is not ideal for this, as it's stored in plaintext.
-Instead, for secrets you should use environmental vairables.
+Some widgets require you to pass potentially sensitive info such as API keys. The `conf.yml` is not ideal for this, as it's stored in plaintext. Instead, for secrets you should use environment variables.
 
-You can do this, by setting the environmental variable name as the value, instead of the actual key, and then setting that env var in your container or local environment.
+In your widget options, set the value to the name of an environment variable starting with `DASHY_` (or `VITE_APP_` / `VUE_APP_` for backwards compatibility). The Dashy server will substitute it with the matching `process.env` value when proxying the request.
 
-The key can be named whatever you like, but it must start with `VUE_APP_` (to be picked up by Vue). If you need to update any of these values, a rebuild is required (this can be done under the Config menu in the UI, or by running `yarn build` then restarting the container).
+The widget must be set to route through the Dashy server with `useProxy: true`. Without this, the placeholder is sent directly to the upstream API and will fail. Substitution covers the request URL, headers and body, so any auth pattern (Bearer, Basic, query param, POST body) works.
 
-For more infomation about setting and managing your environmental variables, see [Management Docs --> Environmental Variables](/docs/management.md#passing-in-environmental-variables).
+For more information about setting and managing your environment variables, see [Management Docs --> Environmental Variables](/docs/management.md#passing-in-environmental-variables).
 
 For example:
 
 ```yaml
 - type: weather
+  useProxy: true
   options:
-    apiKey: VUE_APP_WEATHER_TOKEN
+    apiKey: DASHY_WEATHER_TOKEN
     city: London
     units: metric
     hideDetails: true
 ```
 
-Then, set `VUE_APP_WEATHER_TOKEN='xxx'`
+Then set `DASHY_WEATHER_TOKEN='xxx'` in your container or local environment, and restart Dashy. To rotate the value, just update the env var and restart. No rebuild required.
+
+> [!NOTE]
+> Only env vars starting with `DASHY_`, `VITE_APP_` or `VUE_APP_` are eligible for substitution. Other server-side env vars are never exposed.
+>
+> If you build Dashy from source yourself, `VITE_APP_*` and `DASHY_*` vars set at build time are also baked into the bundle by Vite, which works without `useProxy: true`.
 
 ---
 

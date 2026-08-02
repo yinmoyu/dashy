@@ -2,17 +2,14 @@
  * Mixin for all homepages (default home, minimal home, workspace, etc)
  */
 
-import Defaults, { localStorageKeys, iconCdns } from '@/utils/defaults';
+import Defaults, { localStorageKeys, iconCdns } from '@/utils/config/defaults';
 import Keys from '@/utils/StoreMutations';
 import { searchTiles } from '@/utils/Search';
-import { checkItemVisibility } from '@/utils/CheckItemVisibility';
-import ThemingMixin from '@/mixins/ThemingMixin';
+import { getCurrentUser, isLoggedInAsGuest } from '@/utils/auth/Auth';
+import { isVisibleToUser } from '@/utils/IsVisibleToUser';
+import { resolveRouteIntent, PAGE_STATUS } from '@/utils/config/ConfigHelpers';
 
 const HomeMixin = {
-  mixins: [ThemingMixin],
-  props: {
-    subPageInfo: Object,
-  },
   computed: {
     sections() {
       return this.$store.getters.sections;
@@ -32,6 +29,10 @@ const HomeMixin = {
     pageId() {
       return this.$store.state.currentConfigInfo?.confId || 'home';
     },
+    /* True when the server returned a stripped bootstrap config (e.g. expired token) */
+    isBootstrap() {
+      return this.$store.state.rootConfig?._bootstrap?.authenticated === false;
+    },
   },
   data: () => ({
     searchValue: '',
@@ -40,36 +41,34 @@ const HomeMixin = {
     async $route() {
       this.loadUpConfig();
     },
-    pageInfo: {
-      handler(newPageInfo) {
-        if (newPageInfo && newPageInfo.title) {
-          document.title = newPageInfo.title;
-        }
-      },
-      immediate: true,
-    },
   },
   async created() {
     this.loadUpConfig();
   },
   methods: {
-    /* When page loaded / sub-page changed, initiate config fetch */
+    /* Reload to restart the auth flow, when OIDC/Keycloak get bootstrap marker */
+    reAuth() {
+      window.location.reload();
+    },
+    /* When page loaded / sub-page changed, initiate config fetch.
+     * For ROOT / LEGACY_SECTION intent the store loads the root config
+     * for KNOWN the store loads the matching sub-config
+     * for UNKNOWN the store triggers the critical error modal */
     async loadUpConfig() {
       const subPage = this.determineConfigFile();
+      const current = this.$store.state.currentConfigInfo?.confId || null;
+      if ((subPage || null) === current) return; // Already on this config, no reload
       await this.$store.dispatch(Keys.INITIALIZE_CONFIG, subPage);
     },
-    /* Based on the current route, get which config to display, null will use default */
+    /* Resolve which sub-config the current route targets.
+     * Returns a page id from makePageName, or null for the root config */
     determineConfigFile() {
-      const pagePath = this.$router.currentRoute.path;
-      const isSubPage = new RegExp((/(home|workspace|minimal)\/[a-zA-Z0-9-]+/g)).test(pagePath);
-      const subPageName = isSubPage ? pagePath.split('/').pop() : null;
-      return subPageName;
-    },
-    setTheme() {
-      this.initializeTheme();
+      const { status, pageId } = resolveRouteIntent(this.$route, this.$store);
+      if (status === PAGE_STATUS.ROOT || status === PAGE_STATUS.LEGACY_SECTION) return null;
+      return pageId; // KNOWN -> load sub-config; UNKNOWN -> store raises critical error
     },
     updateModalVisibility(modalState) {
-      this.$store.commit('SET_MODAL_OPEN', modalState);
+      this.$store.commit(Keys.SET_MODAL_OPEN, modalState);
     },
     /* Updates local data with search value, triggered from filter comp */
     searching(searchValue) {
@@ -89,12 +88,16 @@ const HomeMixin = {
       return (sections && sections.length >= 1) || (localSections && localSections.length >= 1);
     },
     /* Returns only the tiles that match the users search query */
-    filterTiles(allTiles) {
-      if (!allTiles) {
-        return [];
-      }
-      const visibleTiles = allTiles.filter((tile) => checkItemVisibility(tile));
-      return searchTiles(visibleTiles, this.searchValue);
+    filterTiles(allTiles, sectionName, opts = {}) {
+      if (!allTiles) return [];
+      const currentUser = getCurrentUser();
+      const isGuest = isLoggedInAsGuest();
+      const showHidden = !!opts.showHidden;
+      const visibleTiles = allTiles.filter(
+        (tile) => isVisibleToUser(tile.displayData || {}, currentUser, isGuest)
+          && (showHidden || !tile.displayData?.hideFromHomepage),
+      );
+      return searchTiles(visibleTiles, this.searchValue, sectionName || '');
     },
     /* Checks if any sections or items use icons from a given CDN */
     checkIfIconLibraryNeeded(prefix) {
@@ -161,13 +164,6 @@ const HomeMixin = {
         return `background: url('${this.appConfig.backgroundImg}') no-repeat center fixed;background-size:cover;`;
       }
       return '';
-    },
-    /* Extracts the site name from domain, used for the searching functionality */
-    getDomainFromUrl(url) {
-      if (!url) return '';
-      const urlPattern = /^(?:https?:\/\/)?(?:w{3}\.)?([a-z\d.-]+)\.(?:[a-z.]{2,10})(?:[/\w.-]*)*/;
-      const domainPattern = url.match(urlPattern);
-      return domainPattern ? domainPattern[1] : '';
     },
   },
 };

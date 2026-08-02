@@ -13,17 +13,17 @@
       <transition name="slide">
         <SideBarSection
           v-if="isOpen[index]"
-          :items="filterTiles(section.items)"
+          :items="visibleItems(section.items)"
           @launch-app="launchApp"
         />
       </transition>
     </div>
-    <!-- Show links for switching back to Home / Minimal views -->
+    <!-- Show links for switching back to Home / Minimal views, preserving sub-page -->
     <div class="switch-view-buttons">
-      <router-link to="/home/">
+      <router-link :to="pathFor('home')">
         <IconHome class="view-icon" v-tooltip="$t('alternate-views.default')" />
       </router-link>
-      <router-link to="/minimal/">
+      <router-link :to="pathFor('minimal')">
         <IconMinimalView class="view-icon" v-tooltip="$t('alternate-views.minimal')" />
       </router-link>
     </div>
@@ -36,14 +36,17 @@ import SideBarItem from '@/components/Workspace/SideBarItem.vue';
 import SideBarSection from '@/components/Workspace/SideBarSection.vue';
 import IconHome from '@/assets/interface-icons/application-home.svg';
 import IconMinimalView from '@/assets/interface-icons/application-minimal.svg';
-import { checkItemVisibility } from '@/utils/CheckItemVisibility';
+import { getCurrentUser, isLoggedInAsGuest } from '@/utils/auth/Auth';
+import { isVisibleToUser } from '@/utils/IsVisibleToUser';
+import { makeRoutePath, resolveRouteIntent } from '@/utils/config/ConfigHelpers';
 
 export default {
   name: 'SideBar',
   props: {
-    sections: Array,
-    initUrl: String,
+    sections: { type: Array, default: () => [] },
+    initUrl: { type: String, default: '' },
   },
+  emits: ['launch-widget', 'launch-app'],
   data() {
     return {
       isOpen: [],
@@ -96,13 +99,19 @@ export default {
         });
       });
     },
-    /* Return a list with visible items on a section to the user or guest */
-    filterTiles(allTiles) {
-      if (!allTiles) {
-        return [];
-      }
-      return allTiles.filter((tile) => checkItemVisibility(tile)
-        && !tile.displayData?.hideFromWorkspace);
+    /* Return the items in a section that the current user/guest can see
+     * and that aren't explicitly hidden from the workspace view */
+    visibleItems(allTiles) {
+      if (!allTiles) return [];
+      const currentUser = getCurrentUser();
+      const isGuest = isLoggedInAsGuest();
+      return allTiles.filter((tile) => !tile.displayData?.hideFromWorkspace
+        && isVisibleToUser(tile.displayData || {}, currentUser, isGuest));
+    },
+    /* Build a URL for the given view, preserving the current sub-page and section */
+    pathFor(view) {
+      const { pageId, sectionSlug } = resolveRouteIntent(this.$route, this.$store);
+      return makeRoutePath(view, pageId, sectionSlug);
     },
   },
   mounted() {
@@ -146,7 +155,7 @@ nav.side-bar {
 .slide-enter-active {
   transition: all 0.1s ease-in-out;
 }
-.slide-enter {
+.slide-enter-from {
   transform: translate(0, -80%);
 }
 .slide-leave-to {

@@ -1,94 +1,118 @@
-import yaml from 'js-yaml';
-import { register } from 'register-service-worker';
+import { load as yamlLoad } from '@/utils/yaml';
 import request from '@/utils/request';
-import { sessionStorageKeys } from '@/utils/defaults';
-import { statusMsg, statusErrorMsg } from '@/utils/CoolConsole';
+import i18n from '@/utils/i18n';
+import { serviceEndpoints } from '@/utils/config/defaults';
+import { statusMsg, statusErrorMsg } from '@/utils/logging/CoolConsole';
+import { toast } from '@/utils/Toast';
 
-/* Sets a local storage item with the state from the SW lifecycle */
-const setSwStatus = (swStateToSet) => {
-  const initialSwState = {
-    ready: false,
-    registered: false,
-    cached: false,
-    updateFound: false,
-    updated: false,
-    offline: false,
-    error: false,
-    devMode: false,
-    disabledByUser: false,
-  };
-  const sessionData = sessionStorage[sessionStorageKeys.SW_STATUS];
-  const currentSwState = sessionData ? JSON.parse(sessionData) : initialSwState;
+const SW_LABEL = 'Service Worker Status';
+const UPDATE_CHECK_INTERVAL_MS = 60 * 60 * 1000; // hourly
+const AUTH_PROXY_COMPAT_KEY = 'dashy-auth-proxy-compat'; // mirrors appConfig.enableAuthProxyCompat
+const AUTH_PROXY_RELOAD_KEY = 'dashy-auth-proxy-reloaded'; // one reload per tab, guards against loops
+
+/* Loads conf.yml and returns the parsed object, or null on failure */
+const loadAppConfig = async () => {
   try {
-    const newSwState = { ...currentSwState, ...swStateToSet };
-    sessionStorage.setItem(sessionStorageKeys.SW_STATUS, JSON.stringify(newSwState));
+    const { data } = await request.get('/conf.yml');
+    return yamlLoad(data) || null;
   } catch (e) {
-    statusErrorMsg('Service Worker Status', 'Error Updating SW Status', e);
+    statusErrorMsg(SW_LABEL, 'Failed to load config for SW check', e);
+    return null;
   }
+};
+
+/* Best-effort cleanup of any prior service worker (used when user opts out) */
+const unregisterAll = async () => {
+  try {
+    const regs = await navigator.serviceWorker.getRegistrations();
+    if (!regs.length) return;
+    await Promise.all(regs.map(r => r.unregister().catch(() => {})));
+    statusMsg(SW_LABEL, 'Service worker unregistered (opt-out).');
+  } catch { /* no-op */ }
+};
+
+/* Remember the opt-in so it's known on later loads even when conf.yml comes from cache or fails */
+const rememberAuthProxyCompat = (enabled) => {
+  try {
+    if (enabled) localStorage.setItem(AUTH_PROXY_COMPAT_KEY, '1');
+    else localStorage.removeItem(AUTH_PROXY_COMPAT_KEY);
+  } catch { /* storage unavailable */ }
+};
+
+const isReloadGuardSet = () => {
+  try { return !!sessionStorage.getItem(AUTH_PROXY_RELOAD_KEY); } catch { return true; }
+};
+const setReloadGuard = (on) => {
+  try {
+    if (on) sessionStorage.setItem(AUTH_PROXY_RELOAD_KEY, '1');
+    else sessionStorage.removeItem(AUTH_PROXY_RELOAD_KEY);
+  } catch { /* no-op */ }
 };
 
 /**
- * Checks if service workers should be enabled
- * Disable if not running in production
- * Or disable if user specified to disable
+ * If enabled (with appConfig.enableAuthProxyCompat), then check for expired sessions,
+ * and then drop the cached SW and trigger a reload so the proxy can re-authenticate user
  */
-const shouldEnableServiceWorker = async () => {
-  const conf = yaml.load((await request.get('/conf.yml')).data);
-  if (conf && conf.appConfig && conf.appConfig.enableServiceWorker) {
-    setSwStatus({ disabledByUser: false });
-    return true;
-  } else if (process.env.NODE_ENV !== 'production') {
-    setSwStatus({ devMode: true });
-    return false;
+const recoverFromAuthProxy = async () => {
+  try { if (localStorage.getItem(AUTH_PROXY_COMPAT_KEY) !== '1') return false; } catch { return false; }
+  let res;
+  try {
+    res = await fetch(serviceEndpoints.getUser, { cache: 'no-store', redirect: 'manual' });
+  } catch { return false; } // network error / offline - keep SW for offline use
+  if (res.type !== 'opaqueredirect') { setReloadGuard(false); return false; } // valid session - re-arm
+  if (!navigator.serviceWorker.controller) return false; // no cached SW blocking the redirect
+  if (isReloadGuardSet()) return false; // already reloaded once - avoid repeat on false positives
+  setReloadGuard(true);
+  statusMsg(SW_LABEL, 'Auth proxy redirect detected - unregistering SW and reloading.');
+  await unregisterAll();
+  window.location.reload();
+  return true;
+};
+
+/* Sticky toast with a Refresh action that swaps in the new SW and reloads */
+const promptForUpdate = (updateSW) => {
+  const t = i18n.global.t;
+  toast(t('updates.sw-update-available'), {
+    type: 'info',
+    duration: 0,
+    dismissible: true,
+    action: { text: t('updates.sw-update-action'), onClick: () => updateSW(true) },
+  });
+};
+
+const initServiceWorker = async () => {
+  if (import.meta.env.DEV) return;
+  if (!('serviceWorker' in navigator)) return;
+
+  const conf = await loadAppConfig();
+  if (conf?.appConfig) {
+    rememberAuthProxyCompat(conf.appConfig.enableServiceWorker && conf.appConfig.enableAuthProxyCompat);
   }
-  setSwStatus({ disabledByUser: true });
-  return false;
-};
 
-/* Calls to the print status function */
-const printSwStatus = (msg) => {
-  statusMsg('Service Worker Status', msg);
-};
+  // Probe for an auth-proxy session expiry
+  if (await recoverFromAuthProxy()) return;
 
-const swUrl = `${process.env.BASE_URL || '/'}service-worker.js`;
+  if (!conf) return; // network/parse failed - leave any existing SW alone
 
-/* If service worker enabled, then register it, and print message when status changes */
-const registerServiceWorker = async () => {
-  if (await shouldEnableServiceWorker()) {
-    register(swUrl, {
-      ready() {
-        setSwStatus({ ready: true });
-        printSwStatus(
-          'Dashy is being served from cache by a service worker.\n'
-          + 'For more details, visit https://goo.gl/AFskqB',
-        );
+  if (!conf.appConfig?.enableServiceWorker) {
+    await unregisterAll();
+    return;
+  }
+
+  try {
+    const { registerSW } = await import('virtual:pwa-register');
+    const updateSW = registerSW({
+      onRegisteredSW(swUrl, reg) {
+        statusMsg(SW_LABEL, `Service worker registered (${swUrl}).`);
+        if (reg) setInterval(() => reg.update().catch(() => {}), UPDATE_CHECK_INTERVAL_MS);
       },
-      registered() {
-        setSwStatus({ registered: true });
-        printSwStatus('Service worker has been registered.');
-      },
-      cached() {
-        setSwStatus({ cached: true });
-        printSwStatus('App has been cached for offline use.');
-      },
-      updatefound() {
-        setSwStatus({ updateFound: true });
-        printSwStatus('New content is downloading...');
-      },
-      updated() {
-        setSwStatus({ updated: true });
-        printSwStatus('New content is available; please refresh the page.');
-      },
-      offline() {
-        setSwStatus({ offline: true });
-        printSwStatus('No internet connection found. Dashy is running in offline mode.');
-      },
-      error(error) {
-        setSwStatus({ error: true });
-        statusErrorMsg('Service Worker Status', 'Error during SW registration', error);
-      },
+      onNeedRefresh: () => promptForUpdate(updateSW),
+      onOfflineReady: () => statusMsg(SW_LABEL, 'App is ready for offline use.'),
+      onRegisterError: (e) => statusErrorMsg(SW_LABEL, 'Error during SW registration', e),
     });
+  } catch (e) {
+    statusErrorMsg(SW_LABEL, 'Error setting up service worker', e);
   }
 };
 
-export default registerServiceWorker;
+export default initServiceWorker;

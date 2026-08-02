@@ -10,7 +10,7 @@
   <div v-if="showData && dnsInfo.length > 0" class="dns-info">
     <div v-for="(item, index) in dnsInfo" :key="index" class="row">
       <span class="lbl">{{ item.lbl }}: </span>
-      <span class="val">{{ item.val | renderVal }}</span>
+      <span class="val">{{ renderVal(item.val) }}</span>
     </div>
   </div>
 </div>
@@ -49,12 +49,13 @@ export default {
   },
   data() {
     return {
+      overrideProxyChoice: true,
       enabled: null,
       dnsInfo: [],
       showData: false,
     };
   },
-  filters: {
+  methods: {
     renderVal(val) {
       if (val === undefined) return 'N/A';
       if (Array.isArray(val) && val.length === 0) return 'N/A';
@@ -63,8 +64,6 @@ export default {
       if (Array.isArray(val)) return val.join('\n');
       return val;
     },
-  },
-  methods: {
     /* Make GET request to AdGuard endpoint */
     fetchData() {
       this.makeRequest(this.basicInoEndpoint, this.authHeaders).then(this.processStatusBasics);

@@ -4,8 +4,8 @@
  */
 import { Progress } from 'rsup-progress';
 import request from '@/utils/request';
-import ErrorHandler from '@/utils/ErrorHandler';
-import { serviceEndpoints } from '@/utils/defaults';
+import ErrorHandler from '@/utils/logging/ErrorHandler';
+import { serviceEndpoints } from '@/utils/config/defaults';
 
 const WidgetMixin = {
   props: {
@@ -30,18 +30,21 @@ const WidgetMixin = {
       this.disableLoader = true;
     }
   },
-  beforeDestroy() {
+  beforeUnmount() {
     if (this.updater) {
       clearInterval(this.updater);
     }
   },
   computed: {
     proxyReqEndpoint() {
-      const baseUrl = process.env.VUE_APP_DOMAIN || window.location.origin;
+      const baseUrl = import.meta.env.VITE_APP_DOMAIN || window.location.origin;
       return `${baseUrl}${serviceEndpoints.corsProxy}`;
     },
     useProxy() {
       return this.options.useProxy || this.overrideProxyChoice;
+    },
+    requestTimeout() {
+      return this.options.timeout || this.defaultTimeout;
     },
     /* Returns either a number in ms to continuously update widget data. Or 0 for no updates */
     updateInterval() {
@@ -97,7 +100,7 @@ const WidgetMixin = {
     /* Used as v-tooltip, pass text content in, and will show on hover */
     tooltip(content, html = false) {
       return {
-        content, html, trigger: 'hover focus', delay: 250,
+        content, html,
       };
     },
     /* Makes data request, returns promise */
@@ -109,9 +112,8 @@ const WidgetMixin = {
       const CustomHeaders = options || null;
       const headers = this.useProxy
         ? { 'Target-URL': endpoint, CustomHeaders: JSON.stringify(CustomHeaders) } : CustomHeaders;
-      const timeout = this.options.timeout || this.defaultTimeout;
       const requestConfig = {
-        method, url, headers, data, timeout,
+        method, url, headers, data, timeout: this.requestTimeout,
       };
       // Make request
       return new Promise((resolve, reject) => {
@@ -123,7 +125,8 @@ const WidgetMixin = {
             resolve(response.data);
           })
           .catch((dataFetchError) => {
-            this.error('Unable to fetch data', dataFetchError);
+            const errorMessage = this.formatRequestError(dataFetchError);
+            this.error(errorMessage, dataFetchError);
             reject(dataFetchError);
           })
           .finally(() => {
@@ -131,18 +134,41 @@ const WidgetMixin = {
           });
       });
     },
-    /* Check if a value is an environment variable, return its value if so. */
-    parseAsEnvVar(str) {
-      if (typeof str !== 'string') return str;
-      if (str.includes('VUE_APP_')) {
-        const envVar = process.env[str];
-        if (!envVar) {
-          this.error(`Environment variable ${str} not found`);
-        } else {
-          return envVar;
+    /* Get user-facing error message from certain failed request types */
+    formatRequestError(err) {
+      if (!err) return 'Unable to fetch data';
+      // Client-side timeout: request never produced a response
+      if (err.timeout && !err.response) {
+        return `Request timed out after ${this.requestTimeout}ms. `
+          + 'Check the target is reachable, or increase the widget\'s `timeout` option';
+      }
+      // Errors surfaced by the cors-proxy carry classification + upstream detail
+      const upstream = err.response && err.response.data && err.response.data.error;
+      if (upstream) {
+        if (upstream.timeout) {
+          return 'Upstream server timed out. The target API is slow or unreachable.';
+        }
+        if (upstream.type === 'upstream_status' && upstream.status) {
+          const tail = upstream.statusText ? ` ${upstream.statusText}` : '';
+          return `Upstream returned ${upstream.status}${tail}.`;
+        }
+        if (upstream.type === 'upstream_error') {
+          return `Could not reach target server${upstream.code ? ` (${upstream.code})` : ''}.`;
         }
       }
-      return str;
+      // Likely CORS error, need useProxy
+      if (!err.response && !this.useProxy) {
+        return 'Failed to reach target from this context. Possibly a CORS error.';
+      }
+      return 'Unable to fetch data';
+    },
+    /* If the string is a build-time env-var placeholder, return its value
+     * Otherwise, will pass it through to the proxy for it to resolve server-side */
+    parseAsEnvVar(str) {
+      if (typeof str !== 'string') return str;
+      if (!/^(?:VITE_APP_|VUE_APP_|DASHY_)/.test(str)) return str;
+      const envKey = str.replace(/^VUE_APP_/, 'VITE_APP_');
+      return import.meta.env[envKey] ?? str;
     },
   },
 };

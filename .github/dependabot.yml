@@ -10,10 +10,10 @@ updates:
     labels:
       - "📦 Dependencies"
     assignees:
-      - Lissy93
+      - lissy93
     commit-message:
-      prefix: "⬆️"
-      prefix-development: "⬆️"
+      prefix: "⬆️ "
+      prefix-development: "⬆️ "
       include: scope
     versioning-strategy: increase
     groups:
@@ -21,20 +21,12 @@ updates:
         patterns:
           - "vue*"
           - "@vue/*"
-          - "v-*"
-        update-types:
-          - minor
-          - patch
-      babel:
-        patterns:
-          - "@babel/*"
         update-types:
           - minor
           - patch
       eslint:
         patterns:
           - "eslint*"
-          - "@vue/eslint-*"
         update-types:
           - minor
           - patch
@@ -51,36 +43,63 @@ updates:
         update-types:
           - minor
           - patch
+      codemirror:
+        patterns:
+          - "@codemirror/*"
+          - "@lezer/*"
+      jsonforms:
+        patterns:
+          - "@jsonforms/*"
       minor-and-patch:
         update-types:
           - minor
           - patch
+    ignore:
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vue-i18n"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "vue-router"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "keycloak-js"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@vitejs/plugin-vue"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "connect-history-api-fallback"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: weekly
-      day: friday
+      interval: monthly
     labels:
       - "📦 Dependencies"
     assignees:
-      - Lissy93
+      - lissy93
     commit-message:
-      prefix: "⬆️"
+      prefix: "⬆️ "
       include: scope
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   - package-ecosystem: docker
     directory: /
     schedule:
-      interval: weekly
-      day: friday
+      interval: monthly
     labels:
       - "📦 Dependencies"
     assignees:
-      - Lissy93
+      - lissy93
     commit-message:
-      prefix: "⬆️"
+      prefix: "⬆️ "
       include: scope
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: devcontainers
     directory: /
@@ -89,7 +108,7 @@ updates:
     labels:
       - "📦 Dependencies"
     assignees:
-      - Lissy93
+      - lissy93
     commit-message:
-      prefix: "⬆️"
+      prefix: "⬆️ "
       include: scope

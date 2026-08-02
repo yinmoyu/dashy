@@ -7,13 +7,46 @@
  * Throws on non-2xx responses (matching axios behavior)
  */
 
+import { makeBasicAuthHeaders } from '@/utils/auth/Auth';
+import { getApiAuthState } from '@/utils/auth/getApiAuthHeader';
+import { getOidcAuth, isOidcEnabled } from '@/utils/auth/OidcAuth';
+import { getKeycloakAuth, isKeycloakEnabled } from '@/utils/auth/KeycloakAuth';
+import { statusErrorMsg, statusMsg } from '@/utils/logging/CoolConsole';
+
 /** Check if a request URL targets the local Dashy server */
 function isLocalRequest(url) {
   if (!url) return false;
   if (url.startsWith('/') && !url.startsWith('//')) return true;
   const { origin } = window.location;
-  const domain = process.env.VUE_APP_DOMAIN;
+  const domain = import.meta.env.VITE_APP_DOMAIN;
   return url.startsWith(origin) || (domain && url.startsWith(domain));
+}
+
+function hasAuthorization(headers) {
+  return Object.keys(headers).some((key) => key.toLowerCase() === 'authorization');
+}
+
+function ssoState() {
+  return { oidc: isOidcEnabled(), keycloak: isKeycloakEnabled() };
+}
+
+/* Convert string key from backend into human issue of why bearer token failed */
+function reportBearerIssue(reason) {
+  if (reason === 'missing') return;
+  const messages = {
+    expired: 'SSO token expired.',
+    malformed: 'SSO token is malformed; sign in again if renewal does not recover it.',
+    'encrypted-jwe': 'SSO token is encrypted. Dashy needs signed JWT tokens, not encrypted JWE tokens.',
+    storage: 'SSO token could not be read from browser storage.',
+  };
+  statusErrorMsg('SSO', messages[reason] || `SSO token is not usable (${reason}).`);
+}
+
+/* Triggers OIDC session renewal to enabled provider (called if get 401) */
+async function renewSsoSession({ oidc, keycloak }) {
+  if (oidc) return getOidcAuth()?.renewForApiRequest?.() || false;
+  if (keycloak) return getKeycloakAuth()?.renewForApiRequest?.() || false;
+  return false;
 }
 
 class RequestError extends Error {
@@ -23,6 +56,7 @@ class RequestError extends Error {
     this.response = opts.response || undefined;
     this.request = opts.request || undefined;
     this.code = opts.code || undefined;
+    this.timeout = opts.timeout === true ? true : undefined;
   }
 }
 
@@ -31,7 +65,7 @@ class RequestError extends Error {
  * @param {Object} config - { method, url, headers, data, timeout, params }
  * @returns {Promise<{data, status, statusText, headers}>}
  */
-async function makeRequest(config) {
+async function makeRequest(config, retriedAfterRenew = false) {
   const {
     method = 'GET',
     url,
@@ -61,12 +95,22 @@ async function makeRequest(config) {
     signal: controller.signal,
   };
 
-  // For local API requests, include basic auth headers when configured
-  if (isLocalRequest(fullUrl) && !fetchOptions.headers.Authorization) {
-    const { makeBasicAuthHeaders } = await import('@/utils/Auth');
-    const authConfig = makeBasicAuthHeaders();
-    if (authConfig.headers) {
-      Object.assign(fetchOptions.headers, authConfig.headers);
+  // For local API requests, attach auth headers when configured
+  // Bearer (OIDC / Keycloak id_token) takes precedence over basic-auth cookie header
+  const isLocal = isLocalRequest(fullUrl);
+  const sso = isLocal ? ssoState() : null;
+
+  if (isLocal && !hasAuthorization(fetchOptions.headers)) {
+    const bearer = getApiAuthState();
+    if (bearer.ok) {
+      Object.assign(fetchOptions.headers, bearer.header);
+    } else if (sso.oidc || sso.keycloak) {
+      reportBearerIssue(bearer.reason);
+    } else {
+      const authConfig = makeBasicAuthHeaders();
+      if (authConfig.headers) {
+        Object.assign(fetchOptions.headers, authConfig.headers);
+      }
     }
   }
 
@@ -91,7 +135,7 @@ async function makeRequest(config) {
     // Parse response - try JSON first, fall back to text
     let responseData;
     const text = await res.text();
-    try { responseData = JSON.parse(text); } catch (_) { responseData = text; }
+    try { responseData = JSON.parse(text); } catch { responseData = text; }
 
     const response = {
       data: responseData,
@@ -102,6 +146,11 @@ async function makeRequest(config) {
 
     // Throw on non-2xx (matching axios behavior)
     if (!res.ok) {
+      if (res.status === 401 && isLocal && !retriedAfterRenew && (sso.oidc || sso.keycloak)) {
+        statusMsg('SSO', 'API request was unauthorized; attempting session renewal.');
+        if (await renewSsoSession(sso)) return makeRequest(config, true);
+        statusErrorMsg('SSO', 'Session renewal failed; reload or sign in again.');
+      }
       throw new RequestError(
         `Request failed with status ${res.status}`,
         { response },
@@ -112,13 +161,11 @@ async function makeRequest(config) {
   } catch (err) {
     if (err instanceof RequestError) throw err;
     // Network error or abort/timeout
-    // Set request: true so callers can distinguish "no response" from other errors
-    // (mirrors axios behavior where error.request is set when no response received)
-    const error = new RequestError(err.message, { request: true });
-    if (err.name === 'AbortError') {
-      error.message = `timeout of ${timeout}ms exceeded`;
-      error.code = 'ECONNABORTED';
-    }
+    const isTimeout = err.name === 'AbortError';
+    const error = new RequestError(
+      isTimeout ? `timeout of ${timeout}ms exceeded` : err.message,
+      { request: true, code: isTimeout ? 'ECONNABORTED' : undefined, timeout: isTimeout },
+    );
     throw error;
   } finally {
     if (timeoutId) clearTimeout(timeoutId);

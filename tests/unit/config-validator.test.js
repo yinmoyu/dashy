@@ -4,7 +4,7 @@ import {
 import path from 'path';
 
 describe('Config Validator', () => {
-  const configValidator = path.resolve(__dirname, '../../services/config-validator.js');
+  const configValidator = path.resolve(__dirname, '../../services/utils/config-validator.js');
 
   beforeEach(() => {
     delete process.env.VUE_APP_CONFIG_VALID;
@@ -12,7 +12,7 @@ describe('Config Validator', () => {
 
   it('validates a correct config file', () => {
     const Ajv = require('ajv');
-    const schema = require('../../src/utils/ConfigSchema.json');
+    const schema = require('../../src/utils/config/ConfigSchema.json');
 
     const validConfig = {
       pageInfo: { title: 'Test' },
@@ -27,7 +27,7 @@ describe('Config Validator', () => {
 
   it('rejects config with invalid structure', () => {
     const Ajv = require('ajv');
-    const schema = require('../../src/utils/ConfigSchema.json');
+    const schema = require('../../src/utils/config/ConfigSchema.json');
 
     const invalidConfig = {
       pageInfo: { title: 'Test' },
@@ -42,7 +42,7 @@ describe('Config Validator', () => {
 
   it('requires sections to be an array', () => {
     const Ajv = require('ajv');
-    const schema = require('../../src/utils/ConfigSchema.json');
+    const schema = require('../../src/utils/config/ConfigSchema.json');
 
     const config = {
       pageInfo: { title: 'Test' },
@@ -56,7 +56,7 @@ describe('Config Validator', () => {
 
   it('allows items with just title', () => {
     const Ajv = require('ajv');
-    const schema = require('../../src/utils/ConfigSchema.json');
+    const schema = require('../../src/utils/config/ConfigSchema.json');
 
     const config = {
       pageInfo: { title: 'Test' },

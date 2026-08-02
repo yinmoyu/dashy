@@ -6,13 +6,13 @@
     <i v-else-if="iconType === 'emoji'" :class="`emoji-icon ${size}`" >{{getEmoji(iconPath)}}</i>
     <!-- Material Design Icon -->
     <span v-else-if="iconType === 'mdi'" :class=" `mdi ${icon} ${size}`"></span>
-    <!-- Simple-Icons -->
+    <!-- Simple-Icons (siPath resolved async after lazy-load) -->
     <svg v-else-if="iconType === 'si' && !broken" :class="`simple-icons ${size}`"
       role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path :d="getSimpleIcon(icon)" />
+      <path v-if="siPath" :d="siPath" />
     </svg>
     <!-- Standard image asset icon -->
-    <img v-else-if="icon" :src="iconPath" @error="imageNotFound"
+    <img v-else-if="icon" :src="iconPath" @error="onImageError" loading="lazy"
       :class="`tile-icon ${size} ${broken ? 'broken' : ''}`"
     />
     <!-- Icon could not load/ broken url -->
@@ -22,20 +22,30 @@
 
 <script>
 import BrokenImage from '@/assets/interface-icons/broken-icon.svg';
-import ErrorHandler from '@/utils/ErrorHandler';
+import ErrorHandler from '@/utils/logging/ErrorHandler';
 import EmojiUnicodeRegex from '@/utils/EmojiUnicodeRegex';
 import emojiLookup from '@/utils/emojis.json';
 import { asciiHash } from '@/utils/MiscHelpers';
-import { faviconApi as defaultFaviconApi, faviconApiEndpoints, iconCdns } from '@/utils/defaults';
+import { faviconApi as defaultFaviconApi, faviconApiEndpoints, iconCdns } from '@/utils/config/defaults';
 
-const simpleicons = require('simple-icons');
+// simple-icons is heavy. So lazy load and then share across instances
+let simpleIconsPromise = null;
+const loadSimpleIcons = () => {
+  if (!simpleIconsPromise) {
+    simpleIconsPromise = import('simple-icons').catch((err) => {
+      simpleIconsPromise = null;
+      throw err;
+    });
+  }
+  return simpleIconsPromise;
+};
 
 export default {
   name: 'Icon',
   props: {
-    icon: String, // Path to icon asset
-    url: String, // Used for fetching the favicon
-    size: String, // Either small, medium or large
+    icon: { type: String, default: '' }, // Path to icon asset
+    url: { type: String, default: '' }, // Used for fetching the favicon
+    size: { type: String, default: '' }, // Either small, medium or large
   },
   components: {
     BrokenImage, // Used when the desired image returns a 404
@@ -51,7 +61,8 @@ export default {
     },
     /* Gets the icon path, dependent on icon type */
     iconPath() {
-      if (this.broken) return this.getFallbackIcon();
+      if (this.broken) return undefined;
+      if (this.attemptedFallback) return this.getFallbackIcon();
       return this.getIconPath(this.icon, this.url);
     },
   },
@@ -59,12 +70,16 @@ export default {
     return {
       broken: false, // If true, was unable to resolve icon
       attemptedFallback: false,
+      siPath: '', // Resolved SVG path for simple-icons (set async)
     };
+  },
+  watch: {
+    icon: { immediate: true, handler: 'resolveSimpleIcon' },
   },
   methods: {
     /* Determine icon type, e.g. local or remote asset, SVG, favicon, font-awesome, etc */
     determineImageType(img) {
-      let imgType = '';
+      let imgType;
       if (!img) imgType = 'none';
       else if (this.isUrl(img)) imgType = 'url';
       else if (this.isImage(img)) imgType = 'img';
@@ -89,7 +104,7 @@ export default {
         case 'custom-favicon': return this.getCustomFavicon(url, img);
         case 'generative': return this.getGenerativeIcon(url);
         case 'mdi': return img; // Material design icons
-        case 'simple-icons': return this.getSimpleIcon(img);
+        // case 'simple-icons': return this.getSimpleIcon(img);
         case 'home-lab-icons': return this.getHomeLabIcon(img);
         case 'selfhst-icons': return this.getSelfhstIcon(img); // selfh.st/icons
         case 'svg': return img; // Local SVG icon
@@ -159,7 +174,7 @@ export default {
     },
     /* Get the URL for a favicon, but using the non-default favicon API */
     getCustomFavicon(fullUrl, faviconIdentifier) {
-      let errorMsg = '';
+      let errorMsg;
       const faviconApi = faviconIdentifier.split('favicon-')[1];
       if (!faviconApi) {
         errorMsg = 'Favicon API not specified';
@@ -187,15 +202,27 @@ export default {
       const host = encodeURI(url) || Math.random().toString();
       return (cdn || iconCdns.generative).replace('{icon}', asciiHash(host));
     },
-    /* Returns the SVG path content  */
-    getSimpleIcon(img) {
-      const imageName = img.charAt(3).toUpperCase() + img.slice(4);
-      const icon = simpleicons[`si${imageName}`];
+    /* Loads SVG path for simple-icons ID. Only loads SI module on first use */
+    async resolveSimpleIcon() {
+      if (this.iconType !== 'si' || !this.icon) {
+        this.siPath = '';
+        return;
+      }
+      let mod;
+      try {
+        mod = await loadSimpleIcons();
+      } catch {
+        this.imageNotFound('Failed to load simple-icons module');
+        return;
+      }
+      const imageName = this.icon.charAt(3).toUpperCase() + this.icon.slice(4);
+      const icon = mod[`si${imageName}`];
       if (!icon) {
         this.imageNotFound(`No icon was found for '${imageName}' in Simple Icons`);
-        return null;
+        this.siPath = '';
+        return;
       }
-      return icon.path;
+      this.siPath = icon.path;
     },
     getSelfhstIcon(img, cdn) {
       const imageName = img.slice(3).toLocaleLowerCase();
@@ -210,14 +237,14 @@ export default {
     getHostName(url) {
       try {
         return new URL(url).hostname;
-      } catch (e) {
+      } catch {
         ErrorHandler('Unable to format URL');
         return url;
       }
     },
     /* Called when the path to the image cannot be resolved */
     imageNotFound(errorMsg) {
-      let outputMessage = '';
+      let outputMessage;
       if (errorMsg && typeof errorMsg === 'string') {
         outputMessage = errorMsg;
       } else if (!this.icon) {
@@ -228,21 +255,20 @@ export default {
       ErrorHandler(outputMessage);
       this.broken = true;
     },
-    /* Called when initial icon has resulted in 404. Attempts to find new icon */
-    getFallbackIcon() {
-      if (this.attemptedFallback) return undefined; // If this is second attempt, then give up
-      const iconType = this.iconType || '';
-      const markAsAttempted = () => { this.broken = false; this.attemptedFallback = true; };
-      if (iconType.includes('favicon')) { // Specify fallback for favicon-based icons
-        markAsAttempted();
-        return this.getFavicon(this.url, 'local');
-      } else if (iconType === 'generative') {
-        markAsAttempted();
-        return this.getGenerativeIcon(this.url, iconCdns.generativeFallback);
-      } else if (iconType === 'home-lab-icons') {
-        markAsAttempted();
-        return this.getHomeLabIcon(this.icon, iconCdns.homeLabIconsFallback);
+    /* On <img> error: try fallback once; if none available or already tried, mark broken */
+    onImageError() {
+      if (this.attemptedFallback || this.getFallbackIcon() === undefined) {
+        this.imageNotFound();
+        return;
       }
+      this.attemptedFallback = true;
+    },
+    /* Returns fallback URL for icon types that have one, else undefined */
+    getFallbackIcon() {
+      const iconType = this.iconType || '';
+      if (iconType.includes('favicon')) return this.getFavicon(this.url, 'local');
+      if (iconType === 'generative') return this.getGenerativeIcon(this.url, iconCdns.generativeFallback);
+      if (iconType === 'home-lab-icons') return this.getHomeLabIcon(this.icon, iconCdns.homeLabIconsFallback);
       return undefined;
     },
   },
@@ -253,6 +279,7 @@ export default {
 
 /* Icon wraper */
 .item-icon {
+  border-radius: var(--curve-factor);
   &.wrapper-medium {
     min-height: 2.5rem;
   }
@@ -305,11 +332,11 @@ export default {
       fill: currentColor;
     }
   }
-  /* Simple Icons */
   .item-icon .simple-icons {
     width: 2rem;
-    &.small { width: 1.5rem; }
-    &.large { width: 2.5rem; }
+    height: 2rem;
+    &.small { width: 1.5rem; height: 1.5rem; }
+    &.large { width: 2.5rem; height: 2.5rem; }
   }
 
   .item-icon .simple-icons path {
@@ -319,7 +346,7 @@ export default {
   i.emoji-icon {
     font-style: normal;
     font-size: 2rem;
-    margin: 0.2rem;
+    margin: 0;
     &.small {
       font-size: 1.5rem;
     }
