@@ -9,6 +9,30 @@ const path = require('path');
 
 const MAX_CONFIG_BYTES = 256 * 1024;
 
+/* Schema modeline, added to conf.yml so editors can validate it (see docs/configuring.md) */
+const SCHEMA_MODELINE = '# yaml-language-server: $schema='
+  + 'https://raw.githubusercontent.com/Lissy93/dashy/master/src/utils/config/ConfigSchema.json';
+
+// Same shape the YAML language server looks for: '# ' then the directive
+const MODELINE = /^#[ \t]+(?:yaml-language-server[ \t]*:|\$schema:).*/m;
+
+/* The document header (comments, blanks, directives) - a modeline is only read from here */
+const headerOf = (text) => {
+  const lines = String(text).split(/\r?\n/);
+  const firstContent = lines.findIndex((line) => !/^\s*(?:#|%|---\s*$|$)/.test(line));
+  return (firstContent === -1 ? lines : lines.slice(0, firstContent)).join('\n');
+};
+
+/* Saving re-serializes the config, which drops all comments. So carry over the
+ * user's modeline (keeping any custom URL), or add the default one to conf.yml */
+const withModeline = (newConfig, oldConfig, isRootConfig) => {
+  // Nothing to do if it's already there, or if a byte-order-mark must stay first
+  if (newConfig.startsWith('\uFEFF') || MODELINE.test(headerOf(newConfig))) return newConfig;
+  const [existing] = headerOf(oldConfig).match(MODELINE) || [];
+  const modeline = existing || (isRootConfig ? SCHEMA_MODELINE : null);
+  return modeline ? `${modeline}\n${newConfig}` : newConfig;
+};
+
 // Disallow paths having path separators, control chars (NUL/CR/LF), or ..
 const SAFE_FILENAME = /^(?!\.+$)[^\\/\0\r\n]+\.ya?ml$/i;
 
@@ -63,7 +87,9 @@ module.exports = async (newConfig, render) => {
 
   // Write the new config
   try {
-    await fsPromises.writeFile(targetFilePath, newConfig.config, { encoding: 'utf8' });
+    const previous = await fsPromises.readFile(targetFilePath, 'utf8').catch(() => '');
+    const toWrite = withModeline(newConfig.config, previous, targetFile === 'conf.yml');
+    await fsPromises.writeFile(targetFilePath, toWrite, { encoding: 'utf8' });
   } catch (error) {
     respond(false, `Unable to write to ${targetFile}: ${error}`);
     return;
