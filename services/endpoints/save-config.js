@@ -9,25 +9,22 @@ const path = require('path');
 
 const MAX_CONFIG_BYTES = 256 * 1024;
 
-/* Schema modeline, added to conf.yml so editors can validate it (see docs/configuring.md) */
+/* Schema modeline to get added to conf.yml */
 const SCHEMA_MODELINE = '# yaml-language-server: $schema='
   + 'https://raw.githubusercontent.com/Lissy93/dashy/master/src/utils/config/ConfigSchema.json';
 
-// Same shape the YAML language server looks for: '# ' then the directive
-const MODELINE = /^#[ \t]+(?:yaml-language-server[ \t]*:|\$schema:).*/m;
-
-/* The document header (comments, blanks, directives) - a modeline is only read from here */
-const headerOf = (text) => {
-  const lines = String(text).split(/\r?\n/);
-  const firstContent = lines.findIndex((line) => !/^\s*(?:#|%|---\s*$|$)/.test(line));
-  return (firstContent === -1 ? lines : lines.slice(0, firstContent)).join('\n');
-};
-
-/* Saving re-serializes the config, which drops all comments. So carry over the
- * user's modeline (keeping any custom URL), or add the default one to conf.yml */
+/* Adds the $schema part in, if not already present */
 const withModeline = (newConfig, oldConfig, isRootConfig) => {
-  // Nothing to do if it's already there, or if a byte-order-mark must stay first
-  if (newConfig.startsWith('\uFEFF') || MODELINE.test(headerOf(newConfig))) return newConfig;
+  // ReGex for checking if a schema reference already present
+  const MODELINE = /^#[ \t]+(?:yaml-language-server[ \t]*:|\$schema:).*/m;
+  const SCHEMA_KEY = /^["']?\$schema["']?[ \t]*:/m;
+
+  // Gets everything before the first line of content
+  const headerOf = (text) => text.split(/^(?![ \t]*(?:#|%|---|$))/m)[0];
+
+  // Skip if a schema is already referenced or if has byte-order-mark
+  if (newConfig.startsWith('\uFEFF') || SCHEMA_KEY.test(newConfig)
+    || MODELINE.test(headerOf(newConfig))) return newConfig;
   const [existing] = headerOf(oldConfig).match(MODELINE) || [];
   const modeline = existing || (isRootConfig ? SCHEMA_MODELINE : null);
   return modeline ? `${modeline}\n${newConfig}` : newConfig;
