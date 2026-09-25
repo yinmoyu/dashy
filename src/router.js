@@ -51,6 +51,16 @@ const resolveStartingView = () => {
   return VIEW_META[view] ? view : 'home';
 };
 
+/* True when a URL points back at the page we're already on, which would redirect forever */
+const isSelfReferential = (url) => {
+  try {
+    const target = new URL(url, window.location.href);
+    const path = (p) => p.replace(/\/+$/, '');
+    return target.origin === window.location.origin
+      && path(target.pathname) === path(window.location.pathname);
+  } catch { return false; }
+};
+
 /* Build the canonical /<view>/:page?/:section? routes for a given view + component.
  * withSection=false for workspace (no single-section view yet). Page meta is
  * owned by App.vue's watcher via PageMeta.js — routes don't carry titles. */
@@ -129,9 +139,10 @@ const router = createRouter({
       component: () => import('./views/404.vue'),
       beforeEnter: (to, from, next) => {
         const url = getUrlForAlias(store.state.rootConfig?.sections, to.params.alias);
-        if (!url) { next('/404'); return; }
+        const loops = !!url && isSelfReferential(url);
+        if (loops) ErrorHandler(`Alias '${to.params.alias}' points back at itself, not redirecting`);
+        if (!url || loops) { next('/404'); return; }
         window.location.replace(url);
-        progress.end();
         next(false);
       },
     },

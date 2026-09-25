@@ -34,6 +34,7 @@ const systemInfo = require('./endpoints/system-info'); // Basic system info, for
 const sslServer = require('./utils/ssl-server'); // TLS-enabled web server
 const corsProxy = require('./endpoints/cors-proxy'); // Enables API requests to CORS-blocked services
 const getUser = require('./endpoints/get-user'); // Enables server side user lookup
+const openSearch = require('./endpoints/opensearch'); // Descriptor for browser keyword search
 const { apiEnabledGate, apiErrorHandler, createApiRouter } = require('./endpoints/api'); // Opt-in REST API
 
 const { loadOidcSettings, createOidcMiddleware, maybeBootstrapConfig } = require('./utils/auth-oidc');
@@ -49,6 +50,7 @@ const ENDPOINTS = {
   corsProxy: '/cors-proxy',
   getUser: '/get-user',
   configSchema: '/schema.json',
+  openSearch: '/opensearch.xml',
   api: '/api',
 };
 
@@ -329,6 +331,16 @@ const app = express()
   .use(ENDPOINTS.api, apiErrorHandler)
   // Serves the config schema, for use by external editors and validators
   .get(ENDPOINTS.configSchema, (req, res) => res.json(configSchema))
+  // OpenSearch descriptor, so browsers can offer Dashy as a keyword search engine
+  // Not cached, since the search template is built from the requesting host
+  .get(ENDPOINTS.openSearch, (req, res) => {
+    try {
+      res.set('Cache-Control', 'no-store')
+        .type('application/opensearchdescription+xml').send(openSearch(config, req));
+    } catch (e) {
+      safeEnd(res, errBody(e), 500);
+    }
+  })
   // Middleware to serve any .yml/.yaml files in USER_DATA_DIR with optional protection
   // Note: returns stripped version if auth configured but not yet authenticated
   .get(/\.ya?ml$/i, bootstrapAuth, (req, res) => {

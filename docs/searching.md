@@ -87,6 +87,17 @@ Some limitations to be aware of:
 - It's not possible to create aliases for pages Dashy already uses, including: 'home', 'minimal', 'workspace', 'login', 'download' and '404'
 - If two items share an alias, the first one in the config wins
 
+
+## Searching From The Address Bar
+
+Dashy publishes an [OpenSearch](https://developer.mozilla.org/en-US/docs/Web/XML/Guides/OpenSearch) descriptor (at `/opensearch.xml`), so your browser can offer it as a search keyword. Once added, typing `dashy jelly` into the address bar jumps straight to Jellyfin if you've setup an `alias` for this.
+
+Most browsers pick this up after you've visited your dashboard, then need the keyword assigning by hand:
+- **Chrome / Edge**: Settings → Search engines → Site search, find your dashboard and set a shortcut
+- **Firefox**: Settings → Search → Search Shortcuts, or right-click the address bar and choose "Add search engine"
+
+You can also skip OpenSearch and add the engine manually, using `https://dashy.lab.local/%s` as the URL.
+
 ## Web Search
 
 It's possible to launch a web search directly from Dashy, which might be useful if you're using Dashy as your start page. This can be done by typing your query as normal, and then pressing <kbd>⏎</kbd>/Enter. Web search options are configured under `appConfig.webSearch`.

@@ -72,8 +72,10 @@ const handleAuthFailure = (provider, err) => {
 const needsOidcLoginPage = () => isOidcLoginPageEnabled() && !isLoggedIn()
   && router.currentRoute.value.name !== 'login';
 
-/* A guard can abort the first navigation (like an item alias redirect), leaving no route to render */
-const skipMount = () => {};
+/* An alias redirect aborts the first navigation on purpose, anything else failing is worth logging */
+const skipMount = (failure) => {
+  if (failure?.to?.name !== 'alias') ErrorHandler('Initial navigation failed', failure);
+};
 
 router.isReady().then(() => {
   if (isOidcEnabled()) {
