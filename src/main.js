@@ -72,9 +72,11 @@ const handleAuthFailure = (provider, err) => {
 const needsOidcLoginPage = () => isOidcLoginPageEnabled() && !isLoggedIn()
   && router.currentRoute.value.name !== 'login';
 
-/* An alias redirect aborts the first navigation on purpose, anything else failing is worth logging */
-const skipMount = (failure) => {
-  if (failure?.to?.name !== 'alias') ErrorHandler('Initial navigation failed', failure);
+/* An alias redirect aborts the first navigation on purpose, anything else should still render */
+const handleAbortedNavigation = (failure) => {
+  if (failure?.to?.name === 'alias') return;
+  ErrorHandler('Initial navigation failed', failure);
+  router.replace({ name: '404' }).catch(() => {}).finally(mount);
 };
 
 router.isReady().then(() => {
@@ -91,4 +93,4 @@ router.isReady().then(() => {
   } else {
     mount();
   }
-}, skipMount);
+}, handleAbortedNavigation);

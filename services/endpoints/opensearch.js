@@ -3,6 +3,8 @@
  * Dashy as a keyword search engine, for jumping to items by their alias
  */
 
+const { originFromRequest } = require('../utils/request-origin');
+
 /* Must match the title on index.html's <link rel="search">, which browsers check on discovery */
 const SHORT_NAME = 'Dashy';
 
@@ -11,14 +13,6 @@ const xmlEscape = (input) => String(input ?? '').replace(
   /[<>&'"]/g,
   (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', "'": '&apos;', '"': '&quot;' }[c]),
 );
-
-/* The public origin this request arrived on, honouring a reverse proxy's forwarded headers */
-const originFromRequest = (req) => {
-  const firstHeader = (name) => (req.headers[name] || '').split(',')[0].trim();
-  const proto = firstHeader('x-forwarded-proto') || (req.socket.encrypted ? 'https' : 'http');
-  const host = firstHeader('x-forwarded-host') || req.headers.host || 'localhost';
-  return `${proto}://${host}`;
-};
 
 module.exports = (config, req) => {
   const origin = xmlEscape(originFromRequest(req));
