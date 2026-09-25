@@ -18,7 +18,7 @@ import Keys from '@/utils/StoreMutations';
 import { isAuthEnabled, isLoggedIn, isGuestAccessEnabled } from '@/utils/auth/Auth';
 import { isOidcEnabled } from '@/utils/auth/OidcAuth';
 import { isKeycloakEnabled } from '@/utils/auth/KeycloakAuth';
-import { isHeaderAuthEnabled } from '@/utils/auth/HeaderAuth';
+import { initHeaderAuth, isHeaderAuthEnabled } from '@/utils/auth/HeaderAuth';
 import { startingView as defaultStartingView, routePaths } from '@/utils/config/defaults';
 import { VIEW_META, getUrlForAlias } from '@/utils/config/ConfigHelpers';
 import ErrorHandler from '@/utils/logging/ErrorHandler';
@@ -59,6 +59,12 @@ const isSelfReferential = (url) => {
     return target.origin === window.location.origin
       && path(target.pathname) === path(window.location.pathname);
   } catch { return false; }
+};
+
+/* Checks wheaather header auth is enabled, before the alias is allowed to access items */
+const identityResolved = async () => {
+  if (!isHeaderAuthEnabled() || isLoggedIn()) return true;
+  return initHeaderAuth().then(() => true, () => false);
 };
 
 /* Build the canonical /<view>/:page?/:section? routes for a given view + component.
@@ -137,8 +143,9 @@ const router = createRouter({
       path: '/:alias',
       name: 'alias',
       component: () => import('./views/404.vue'),
-      beforeEnter: (to, from, next) => {
-        const url = getUrlForAlias(store.state.rootConfig?.sections, to.params.alias);
+      beforeEnter: async (to, from, next) => {
+        const url = (await identityResolved())
+          ? getUrlForAlias(store.state.rootConfig?.sections, to.params.alias) : undefined;
         const loops = !!url && isSelfReferential(url);
         if (loops) ErrorHandler(`Alias '${to.params.alias}' points back at itself, not redirecting`);
         if (!url || loops) { next('/404'); return; }
