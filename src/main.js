@@ -72,6 +72,9 @@ const handleAuthFailure = (provider, err) => {
 const needsOidcLoginPage = () => isOidcLoginPageEnabled() && !isLoggedIn()
   && router.currentRoute.value.name !== 'login';
 
+/* A guard can abort the first navigation (like an item alias redirect), leaving no route to render */
+const skipMount = () => {};
+
 router.isReady().then(() => {
   if (isOidcEnabled()) {
     initOidcAuth().then((reloading) => {
@@ -86,4 +89,4 @@ router.isReady().then(() => {
   } else {
     mount();
   }
-});
+}, skipMount);

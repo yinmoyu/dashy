@@ -20,7 +20,7 @@ import { isOidcEnabled } from '@/utils/auth/OidcAuth';
 import { isKeycloakEnabled } from '@/utils/auth/KeycloakAuth';
 import { isHeaderAuthEnabled } from '@/utils/auth/HeaderAuth';
 import { startingView as defaultStartingView, routePaths } from '@/utils/config/defaults';
-import { VIEW_META } from '@/utils/config/ConfigHelpers';
+import { VIEW_META, getUrlForAlias } from '@/utils/config/ConfigHelpers';
 import ErrorHandler from '@/utils/logging/ErrorHandler';
 
 const progress = new Progress({ color: 'var(--progress-bar)' });
@@ -121,6 +121,18 @@ const router = createRouter({
           ErrorHandler(`Route not found: '${to.redirectedFrom.fullPath}'`);
         }
         next();
+      },
+    },
+    { // Item aliases, where /<alias> redirects straight to that item's URL
+      path: '/:alias',
+      name: 'alias',
+      component: () => import('./views/404.vue'),
+      beforeEnter: (to, from, next) => {
+        const url = getUrlForAlias(store.state.rootConfig?.sections, to.params.alias);
+        if (!url) { next('/404'); return; }
+        window.location.replace(url);
+        progress.end();
+        next(false);
       },
     },
     { // Redirect any not-found routed to the 404 view
