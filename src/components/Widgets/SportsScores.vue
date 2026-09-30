@@ -93,7 +93,7 @@ export default {
       return this.options.leagueId;
     },
     apiKey() {
-      return this.parseAsEnvVar(this.options.apiKey);
+      return this.parseAsEnvVar(this.options.apiKey) || '123';
     },
     limit() {
       return this.options.limit || 20;
@@ -142,11 +142,6 @@ export default {
       }
     },
     fetchData() {
-      if (!this.apiKey) {
-        this.error('An apiKey is required, see the docs for more info');
-        this.finishLoading();
-        return;
-      }
       request.get(this.endpoint)
         .then((response) => {
           this.processData(response.data.results || response.data.events);

@@ -918,7 +918,7 @@ Show recent scores and upcoming matches from your favorite sports team. Data is 
 **`teamId`** | `string` |  **Optional** | The ID of a team to fetch scores from. You can search for your team on the [Teams Page](https://www.thesportsdb.com/teams_main.php)
 **`leagueId`** | `string` |  **Optional** | Alternatively, provide a league ID to fetch all games from. You can find the ID on the [Leagues Page](https://www.thesportsdb.com/Sport/Leagues)
 **`pastOrFuture`** | `string` |  **Optional** | Set to `past` to show scores for recent games, or `future` to show upcoming games. Defaults to `past`. You can change this within the UI
-**`apiKey`** | `string` | Required | Your API key from [TheSportsDB.com](https://www.thesportsdb.com/pricing). Their [free key](https://www.thesportsdb.com/documentation#free_vs_premium) works too, but only returns one match at a time
+**`apiKey`** | `string` | **Optional** | Optionally specify your API key, which you can sign up for at [TheSportsDB.com](https://www.thesportsdb.com/)
 **`limit`** | `number` | **Optional** | To limit output to a certain number of matches, defaults to `15`
 **`hideImage`** | `boolean` | **Optional** | Set to `true` to not render the team / match banner image, defaults to `false`
 
@@ -928,13 +928,12 @@ Show recent scores and upcoming matches from your favorite sports team. Data is 
 - type: sports-scores
   options:
     teamId: 133636
-    apiKey: xxxxxxxx
 ```
 
 #### Info
 
 - **CORS**: 🟢 Enabled
-- **Auth**: 🔴 Required
+- **Auth**: 🟠 Optional
 - **Price**: 🟠 Free plan (up to 30 requests / minute, limited endpoints)
 - **Host**: Managed Instance Only
 - **Privacy**: ⚫ No Policy Available
