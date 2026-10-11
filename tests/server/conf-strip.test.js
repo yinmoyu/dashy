@@ -78,6 +78,10 @@ describe('OIDC strip behaviour for /conf.yml', () => {
     expect(res.status).toBe(401);
   });
 
+  it.each(['/conf%2Eyml', '/sub.ya%6Dl', '/sub.yml%2F.'])('does not serve %s via static', async (url) => {
+    expect((await request(app).get(url)).status).toBe(404);
+  });
+
   it('falls through to bootstrap on conf.yml when Bearer fails to verify', async () => {
     const res = await request(app)
       .get('/conf.yml')

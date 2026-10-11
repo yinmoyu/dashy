@@ -32,6 +32,7 @@ const pingCheck = require('./endpoints/ping-check'); // Used by the ping check f
 const saveConfig = require('./endpoints/save-config'); // Saves users new conf.yml to file-system
 const systemInfo = require('./endpoints/system-info'); // Basic system info, for resource widget
 const sslServer = require('./utils/ssl-server'); // TLS-enabled web server
+const blockStaticYaml = require('./utils/block-static-yaml'); // Keeps YAML out of static serving
 const corsProxy = require('./endpoints/cors-proxy'); // Enables API requests to CORS-blocked services
 const getUser = require('./endpoints/get-user'); // Enables server side user lookup
 const openSearch = require('./endpoints/opensearch'); // Descriptor for browser keyword search
@@ -373,7 +374,8 @@ const app = express()
       if (err) safeEnd(res, errBody(`Could not read ${ymlFile}`), 404);
     });
   })
-  // Serves up static files
+  // Serves up static files, except YAML (handled above)
+  .use(blockStaticYaml)
   .use(express.static(path.resolve(rootDir, process.env.USER_DATA_DIR || 'user-data')))
   .use(express.static(path.join(rootDir, 'dist')))
   .use(express.static(path.join(rootDir, 'public'), { index: 'initialization.html' }))
