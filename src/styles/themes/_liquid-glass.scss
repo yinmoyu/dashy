@@ -54,6 +54,12 @@ html[data-theme='liquid-glass'] {
     background: transparent;
   }
 
+  .minimal-section-heading,
+  .minimal-section-inner.selected,
+  .tab-scroll-btn {
+    border-color: var(--nav-link-border-color);
+  }
+
   header,
   section.settings-outer,
   .options-panel,
