@@ -3740,7 +3740,7 @@ For example:
 
 ```yaml
 - type: gl-current-cpu
-  timeout: 8000
+  timeout: 90000
   options:
     hostname: https://glances.dns-device.local
 ```

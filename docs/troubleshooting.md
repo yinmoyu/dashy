@@ -42,6 +42,7 @@
   - [404 On Static Hosting](#404-on-static-hosting)
   - [404 from Mobile Home Screen](#404-after-launch-from-mobile-home-screen)
   - [404 On Multi-Page Apps](#404-on-multi-page-apps)
+  - [Item Opens a Dashy URL Instead of the App](#item-opens-a-dashy-url-instead-of-the-app)
   - [Blocked request in dev mode](#blocked-request-this-host-is-not-allowed-in-dev-mode)
   - [Refused to Connect in Web Content View](#refused-to-connect-in-modal-or-workspace-view)
 - [Sub-pages](#sub-pages)
@@ -53,6 +54,7 @@
 - [Build & memory errors](#build--memory-errors)
   - [Yarn Build or Run Error](#yarn-error)
   - [The engine "node" is incompatible with this module](#the-engine-node-is-incompatible-with-this-module)
+  - [Cannot find module after updating](#cannot-find-module-after-updating)
   - [`yarn build` fails inside the container](#yarn-build-fails-inside-the-container)
   - [High CPU or RAM Usage on Startup](#high-cpu-or-ram-usage-on-startup)
   - [Heap limit Allocation failed](#ineffective-mark-compacts-near-heap-limit-allocation-failed)
@@ -61,6 +63,7 @@
   - [Cannot find module './_baseValues'](#error-cannot-find-module-_basevalues)
 - [Auth & OIDC](#auth--oidc)
   - [Auth Validation Error: "must be object"](#auth-validation-error-must-be-object)
+  - [Anyone can open /conf.yml without logging in](#anyone-can-open-confyml-without-logging-in)
   - [Keycloak Redirect Error](#keycloak-redirect-error)
   - [OIDC or Keycloak failure on numeric client IDs](#oidc-or-keycloak-failure-on-numeric-client-ids)
   - [Redirect loop after login](#redirect-loop-after-login)
@@ -84,11 +87,15 @@
   - [Docker Login Fails on Ubuntu](#docker-login-fails-on-ubuntu)
 - [Styles, icons and assets](#styles-icons-and-assets)
   - [Styles and Assets not Updating](#styles-and-assets-not-updating)
+  - [Custom Theme not Applying After v4 Upgrade](#custom-theme-not-applying-after-v4-upgrade)
   - [Custom PWA Icon or Name not Showing](#custom-pwa-icon-or-name-not-showing)
+  - [Item Icons not Displaying](#item-icons-not-displaying)
   - [Font Awesome Icons not Displaying](#font-awesome-icons-not-displaying)
 - [Widgets](#widgets)
   - [Diagnosing Widget Errors](#widget-errors)
+  - [Widget Stopped Working](#widget-stopped-working)
   - [Fixing Widget CORS Errors](#widget-cors-errors)
+  - [Widget Can't Reach a Local Service](#widget-cant-reach-a-local-service)
   - [CORS Proxy connect ECONNREFUSED or ENOTFOUND](#cors-proxy-connect-econnrefused--or-getaddrinfo-enotfound-)
   - [CORS Proxy Target-URL host blocked or scheme rejected](#cors-proxy-target-url-host--is-blocked--must-use-http-or-https)
   - [CORS Proxy TLS certificate errors](#cors-proxy-unable_to_verify_leaf_signature-or-err_tls_cert_altname_invalid)
@@ -99,6 +106,7 @@
 - [Errors and warnings](#errors-and-warnings)
   - [Config Validation Errors](#config-validation-errors)
   - [Warnings in the Console during deploy](#warnings-in-the-console-during-deploy)
+  - [SSL Not Enabled in the Logs](#ssl-not-enabled-in-the-logs)
   - [Copy to Clipboard not Working](#copy-to-clipboard-not-working)
 - [How-To / Reference](#how-to--reference)
   - [How to Reset Local Settings](#how-to-reset-local-settings)
@@ -367,6 +375,10 @@ Similar to above, if you get a 404 error when visiting a page directly on multi-
 
 See also: [#670](https://github.com/Lissy93/dashy/issues/670), [#763](https://github.com/Lissy93/dashy/issues/763)
 
+### Item Opens a Dashy URL Instead of the App
+
+If clicking an item takes you to something like `dashy.example.com/home/www.example.com`, then the item's `url` is missing its protocol. Add `http://` or `https://` to the start, e.g. `url: https://www.example.com`.
+
 <a id="invalid-host-header-while-running-through-ngrok"></a>
 
 ### `Blocked request. This host is not allowed` in dev mode
@@ -530,6 +542,21 @@ Check your current version with `node --version`.
 The easiest way to do this, is to use a version manager, like [nvm](https://github.com/nvm-sh/nvm) to quickly download and apply different node versions. Run `nvm install 24` then `nvm use 24`.
 
 
+### `Cannot find module` after updating
+
+If Dashy won't start after an update, with an error like `Error: Cannot find module 'jose'`, then the new version's dependencies weren't installed. If you run Dashy from source, do all of these steps on every update, from Dashy's directory:
+
+```bash
+git pull origin master
+yarn
+yarn build
+yarn start
+```
+
+Use `yarn` rather than `npm`, so you get the exact versions Dashy was tested with. If you've used `npm install` before, delete `node_modules` and `package-lock.json`, then run `yarn` again.
+
+If you installed with the [Proxmox VE Helper-Scripts](/docs/deployment/self-hosted-os.md#proxmox-ve), run `update` in the LXC's console instead, and report any problems with the script to that project.
+
 ### `yarn build` fails inside the container
 
 If you run `docker exec <container> yarn build` and get `vite: not found` (or similar), it's because the published image ships only production dependencies. The build toolchain (vite, vue-tsc, sass, etc.) lives in `devDependencies` and isn't installed in the runtime image.
@@ -611,6 +638,14 @@ auth:
   - user: xxx
     hash: xxx
 ```
+
+### Anyone can open `/conf.yml` without logging in
+
+With only `auth.users` set, the login page runs in the browser, but the server doesn't check it. So anyone can still open `/conf.yml` directly, and see your config, users and password hashes.
+
+To have the server enforce the login too, set the `ENABLE_HTTP_AUTH=true` environment variable and restart Dashy. Note that guest access doesn't work in this mode. Or use OIDC, Keycloak or header auth instead. See [Choosing a Protection Mode](/docs/authentication/built-in.md#choosing-a-protection-mode).
+
+Logged-in users can still read the whole config, so keep API keys out of it with [environment variables](/docs/widgets.md#handling-secrets).
 
 ### Keycloak Redirect Error
 
@@ -818,6 +853,21 @@ Run `sudo apt install gnupg2 pass && gpg2 -k`
 
 If you find that your styles and other visual assets work when visiting `ip:port` by not `dashy.domain.com`, then this is usually caused by caching. In your browser, do a hard-refresh (<kbd>Ctrl</kbd> + <kbd>F5</kbd>). If you use Cloudflare, then you can clear the cache through the management console, or set the cache level to Bypass for certain files, under the Rules tab.
 
+### Custom Theme not Applying After v4 Upgrade
+
+Older versions rebuilt Dashy when the container started, so you could mount SCSS files into `/app/src`, like `user-defined-themes.scss`. The v4 image comes prebuilt without the source code, so those files are now ignored.
+
+Move your styles into a plain CSS file in `user-data`, wrapped in `html[data-theme='mytheme'] { ... }`, then load it with:
+
+```yaml
+appConfig:
+  theme: mytheme
+  cssThemes: [mytheme]
+  externalStyleSheet: /mytheme.css
+```
+
+See [Full CSS file](/docs/theming.md#option-2-full-css-file) for a complete example. SCSS-only syntax, like `$variables` or `//` comments, won't work in a CSS file. A `//` comment breaks the rule after it, so use `/* */` instead.
+
 ### Custom PWA Icon or Name not Showing
 
 To install Dashy as an app with your own name and icon, add a manifest to your `user-data` folder. This is what Firefox's "Add tab to taskbar" and Chrome or Edge's Install button read. `pageInfo.title` and `pageInfo.favicon` only change the browser tab.
@@ -861,6 +911,17 @@ Example of skipping auth in nginx for manifest and icons:
 
 See also: [#2391](https://github.com/Lissy93/dashy/issues/2391)
 
+### Item Icons not Displaying
+
+If an item's icon is blank, check which kind of icon it is:
+
+- **Local images** go in `user-data/item-icons/`, and are referenced by file name, e.g. `icon: proxmox.png`. Check it loads at `https://your-dashy/item-icons/proxmox.png`. If not, check the file name, and that your Docker mount includes that folder. Only lowercase `.png`, `.svg` and `.jpg` files are recognised, so convert or rename anything else, like `.webp`, `.jpeg` or `.PNG`.
+- **Favicons** (`icon: favicon`) are fetched by an online service, which can't reach your local network. Dashy only loads `/favicon.ico` straight from the service when its URL is a private IP or `localhost`. Set `appConfig.faviconApi: local` to do this for every item. If the service keeps its icon somewhere else, use the image's URL or an icon pack instead.
+- **Icon packs** need their prefix, e.g. `hl-proxmox` or `fas fa-server`. Check the name exists in that pack.
+- **Icon URLs** must point straight at the image, and be reachable from your browser. For GitHub, use the raw file link, not the `/blob/` page.
+
+See [Icons](/docs/icons.md) for all the options.
+
 ### Font Awesome Icons not Displaying
 
 Usually, Font Awesome will be automatically enabled if one or more of your icons are using Font-Awesome. If this is not happening, then you can always manually enable (or disable) Font Awesome by setting: [`appConfig`](/docs/configuring.md#appconfig-optional).`enableFontAwesome` to `true`.
@@ -903,6 +964,12 @@ If the console message mentions to corss-origin blocking, then this is a CORS er
 
 If you're able to, you can find more information about why the request may be failing in the Dev Tools under the Network tab, and you can ensure your endpoint is correct and working using a tool like Postman.
 
+### Widget Stopped Working
+
+If a widget that used to work now shows `Unable to fetch data` or another error, the API behind it has usually changed. These get fixed in Dashy as they come up, so first update to the latest version. Then check the [widget's docs](/docs/widgets.md) for anything new it needs, e.g. Pi-hole v6 needs the `pi-hole-stats-v6` widget.
+
+Still failing? Find the real error in the [browser console](#how-to-open-browser-console) and Network tab, then [raise a ticket](#how-to-make-a-bug-report).
+
 ### Widget CORS Errors
 
 The most common widget issue is a CORS error. This is a browser security mechanism which prevents the client-side app (Dashy) from from accessing resources on a remote origin, without that server's explicit permission (e.g. with headers like Access-Control-Allow-Origin). See the MDN Docs for more info: [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS).
@@ -939,6 +1006,12 @@ Just add the `useProxy: true` option to the failing widget.
 #### Option 4 - Use a plugin
 
 For testing purposes, you can use an addon, which will disable the CORS checks. You can get the Allow-CORS extension for [Chrome](https://chrome.google.com/webstore/detail/allow-cors-access-control/lhobafahddgcelffkeicbaginigeejlf?hl=en-US) or [Firefox](https://addons.mozilla.org/en-US/firefox/addon/access-control-allow-origin/), more details [here](https://mybrowseraddon.com/access-control-allow-origin.html)
+
+### Widget Can't Reach a Local Service
+
+Widgets fetch their data from your browser, not from Dashy's server. So `http://localhost:61208` means the device you're browsing on, and a container name like `http://glances:61208` won't resolve at all.
+
+Use an address your browser can reach, like the server's IP. Or add `useProxy: true` to the widget, so Dashy's server makes the request instead. Container names then work if Dashy is on the same Docker network, but `localhost` means the Dashy container, see [below](#cors-proxy-connect-econnrefused--or-getaddrinfo-enotfound-). To proxy all widgets, set `appConfig.widgetsAlwaysUseProxy: true`.
 
 ### CORS Proxy `connect ECONNREFUSED ...` or `getaddrinfo ENOTFOUND ...`
 
@@ -1017,6 +1090,12 @@ If the issue still persists, you should raise an issue.
 ### Warnings in the Console during deploy
 
 Please acknowledge the difference between errors and warnings before raising an issue about messages in the console. It's not unusual to see warnings about a new version of a certain package being available, an asset bundle bing oversized or a service worker not yet having a cache. These shouldn't have any impact on the running application, so please don't raise issues about these unless it directly relates to a bug or issue you're experiencing. Errors on the other hand should not appear in the console, and they are worth looking into further.
+
+### "SSL Not Enabled" in the Logs
+
+`SSL Not Enabled: Public key not present` is printed every time Dashy starts without SSL certificates. It's just a notice, and is safe to ignore if you don't want HTTPS, or a reverse proxy handles it for you. If it says `Private key not present`, your public key was found but the private key wasn't, so check its path.
+
+To serve HTTPS from Dashy itself, mount your certificates as shown in [SSL Certificates](/docs/management.md#ssl-certificates). Dashy then redirects HTTP to its SSL port, so publish that port with the same number on both sides, e.g. `-p 443:443`, or set `SSL_PORT=8443` and use `-p 8443:8443`. If you'd rather keep plain HTTP, set `REDIRECT_HTTPS=false`.
 
 ### Copy to Clipboard not Working
 
