@@ -92,6 +92,7 @@
   - [Public IP Widget not working for ipinfo or ipquery providers](#public-ip-widget-not-working-for-ipinfo-or-ipquery-providers)
 - [Font Awesome Icons not Displaying](#font-awesome-icons-not-displaying)
 - [Copy to Clipboard not Working](#copy-to-clipboard-not-working)
+- [Custom PWA Icon or Name not Showing](#custom-pwa-icon-or-name-not-showing)
 - [How-To / Reference](#how-to--reference)
   - [How to Reset Local Settings](#how-to-reset-local-settings)
   - [How to make a bug report](#how-to-make-a-bug-report)
@@ -992,6 +993,51 @@ As a workaround, you could either:
 
 - Highlight the text and copy / <kbd>Ctrl</kbd> + <kbd>C</kbd>
 - Or setup SSL - [here's a guide](https://github.com/Lissy93/dashy/blob/master/docs/management.md#ssl-certificates) on doing so
+
+---
+
+## Custom PWA Icon or Name not Showing
+
+To install Dashy as an app with your own name and icon, add a manifest to your `user-data` folder. This is what Firefox's "Add tab to taskbar" and Chrome or Edge's Install button read. `pageInfo.title` and `pageInfo.favicon` only change the browser tab.
+
+1. If you're using Docker, mount the whole `user-data` folder, not just `conf.yml`
+2. Put a 192x192 and a 512x512 PNG of your icon in user-data, e.g. `icon-192.png` and `icon-512.png`
+3. Create `user-data/manifest.webmanifest`. Dashy v4 doesn't use `manifest.json`
+4. Check that `https://your-dashy/manifest.webmanifest` shows your JSON, not Dashy's default
+
+Example user-data/manifest.webmanifest
+
+   ```json
+   {
+     "name": "My Dashboard",
+     "short_name": "Dashboard",
+     "start_url": "/",
+     "scope": "/",
+     "display": "standalone",
+     "icons": [
+       { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+       { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+     ]
+   }
+   ```
+
+If the installed app still has Dashy's name or icon, it's usually one of these:
+
+- **Browser cache.** Your browser saves the app's details the first time you install it, so remove the app and add it again. In Firefox, open the app and click "Remove tab from taskbar" in the address bar. Unpinning it from the Windows taskbar isn't enough. Still stuck? Try a fresh browser profile.
+- **Service worker.** With `appConfig.enableServiceWorker: true`, the service worker can keep serving the old manifest. Set it to `false`, or clear the site's data in your browser.
+- **SVG icons.** Browser support for SVG manifest icons varies, so include the PNGs.
+- **Content-Security-Policy.** If you set a CSP header, it needs `manifest-src 'self'` or the browser will block the manifest.
+- **Auth proxy.** If the manifest URL shows a login page, your proxy is blocking it. Let the manifest and icons through without auth (see below)
+
+Example of skipping auth in nginx for manifest and icons:
+  ```nginx
+  location ~ ^/(manifest\.webmanifest|icon-.*\.png)$ {
+      auth_request off;
+      proxy_pass http://dashy:8080;
+  }
+  ```
+
+See also: [#2391](https://github.com/Lissy93/dashy/issues/2391)
 
 ---
 
