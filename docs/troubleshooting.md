@@ -29,12 +29,22 @@
   - [Saved successfully but the UI shows the old config](#saved-successfully-but-the-ui-shows-the-old-config)
   - [Container crashes or restart loop after saving](#container-crashes-or-restart-loop-after-saving-310-and-311-only)
   - [Intentionally read-only mode](#intentionally-read-only-mode)
-- [Refused to Connect in Web Content View](#refused-to-connect-in-modal-or-workspace-view)
+- [Status Checks Failing](#status-checks-failing)
+  - [Service Error 401 or 403](#service-error---401-or-403)
+  - [Service Error with another status code](#service-error-with-another-status-code)
+  - [Invalid URL or EBLOCKED](#invalid-url-or-eblocked)
+  - [Certificate errors](#certificate-errors)
+  - [ECONNREFUSED, ENOTFOUND or ECONNABORTED](#econnrefused-enotfound-or-econnaborted)
+  - [Every item shows Failed to make request or Request timed out](#every-item-shows-failed-to-make-request-or-request-timed-out)
+  - [Service doesn't use HTTP](#service-doesnt-use-http)
+  - [Still not sure why it's failing](#still-not-sure-why-its-failing)
 - [404 / Routing issues](#404--routing-issues)
   - [404 On Static Hosting](#404-on-static-hosting)
   - [404 from Mobile Home Screen](#404-after-launch-from-mobile-home-screen)
   - [404 On Multi-Page Apps](#404-on-multi-page-apps)
   - [Dashy hosted at a sub-path](#dashy-hosted-at-a-sub-path-eg-examplecomdashy)
+  - [Ngrok Invalid Host Headers](#invalid-host-header-while-running-through-ngrok)
+  - [Refused to Connect in Web Content View](#refused-to-connect-in-modal-or-workspace-view)
 - [Sub-pages](#sub-pages)
   - [Sub-page shows "Unable to find config for ..."](#sub-page-shows-unable-to-find-config-for-)
   - [Sub-page missing from nav, or won't open when clicked](#sub-page-missing-from-nav-or-wont-open-when-clicked)
@@ -75,11 +85,10 @@
   - [no matching manifest for linux/arm/v7 (32-bit ARM)](#no-matching-manifest-for-linuxarmv7)
   - [Healthcheck Failing in Docker](#healthcheck-failing-in-docker)
   - [Docker Login Fails on Ubuntu](#docker-login-fails-on-ubuntu)
-- [Styles and Assets not Updating](#styles-and-assets-not-updating)
-- [Config Validation Errors](#config-validation-errors)
-- [Ngrok Invalid Host Headers](#invalid-host-header-while-running-through-ngrok)
-- [Warnings in the Console during deploy](#warnings-in-the-console-during-deploy)
-- [Status Checks Failing](#status-checks-failing)
+- [Styles, icons and assets](#styles-icons-and-assets)
+  - [Styles and Assets not Updating](#styles-and-assets-not-updating)
+  - [Custom PWA Icon or Name not Showing](#custom-pwa-icon-or-name-not-showing)
+  - [Font Awesome Icons not Displaying](#font-awesome-icons-not-displaying)
 - [Widgets](#widgets)
   - [Diagnosing Widget Errors](#widget-errors)
   - [Fixing Widget CORS Errors](#widget-cors-errors)
@@ -90,9 +99,10 @@
   - [Weather Forecast Widget 401](#weather-forecast-widget-401)
   - [Widget Displaying Inaccurate Data](#widget-displaying-inaccurate-data)
   - [Public IP Widget not working for ipinfo or ipquery providers](#public-ip-widget-not-working-for-ipinfo-or-ipquery-providers)
-- [Font Awesome Icons not Displaying](#font-awesome-icons-not-displaying)
-- [Copy to Clipboard not Working](#copy-to-clipboard-not-working)
-- [Custom PWA Icon or Name not Showing](#custom-pwa-icon-or-name-not-showing)
+- [Errors and warnings](#errors-and-warnings)
+  - [Config Validation Errors](#config-validation-errors)
+  - [Warnings in the Console during deploy](#warnings-in-the-console-during-deploy)
+  - [Copy to Clipboard not Working](#copy-to-clipboard-not-working)
 - [How-To / Reference](#how-to--reference)
   - [How to Reset Local Settings](#how-to-reset-local-settings)
   - [How to make a bug report](#how-to-make-a-bug-report)
@@ -286,50 +296,45 @@ To hide the "Save to disk" UI for everyone, set `appConfig.preventWriteToDisk: t
 
 ---
 
-## `Refused to Connect` in Modal or Workspace View
+## Status Checks Failing
 
-This is not an issue with Dashy, but instead caused by the target app preventing direct access through embedded elements.
+Hover over an item's status indicator to see the error, then find it below.
 
-As defined in [RFC-7034](https://datatracker.ietf.org/doc/html/rfc7034), for any web content to be accessed through an embedded element, it must have the [`X-Frame-Options`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) HTTP header set to `ALLOW`. If you are getting a `Refused to Connect` error then this header is set to `DENY` (or `SAMEORIGIN` and it's on a different host). Thankfully, for self-hosted services, it is easy to set these headers.
+### `Service Error - 401` or `403`
 
-These settings are usually set in the config file for the web server that's hosting the target application, here are some examples of how to enable cross-origin access with common web servers:
+The service wants credentials. Pass them with [`statusCheckHeaders`](/docs/status-indicators.md#setting-custom-headers), e.g. `statusCheckHeaders: { Authorization: 'Bearer <token>' }`. If you only need to know it's running, accept the code instead with `statusCheckAcceptCodes: '401'`.
 
-### NGINX
+### `Service Error` with another status code
 
-In NGINX, you can use the [`add_header`](https://nginx.org/en/docs/http/ngx_http_headers_module.html) module within the app block.
+The service replied, but not with a 2xx code. If that's normal for this URL, add the code to `statusCheckAcceptCodes`, e.g. `'404'`. Or point `statusCheckUrl` at a page that does return 200, like a health or login page.
 
-```text
-server {
-  ...
-  add_header X-Frame-Options SAMEORIGIN always;
-}
-```
+### `Invalid URL` or `EBLOCKED`
 
-Then reload with `service nginx reload`
+The URL is missing its protocol. Use `http://192.168.1.5:8080`, not `192.168.1.5:8080`, and include the port if your service needs one.
 
-### Caddy
+### Certificate errors
 
-In Caddy, you can use the [`header`](https://caddyserver.com/docs/caddyfile/directives/header) directive.
+Errors like `DEPTH_ZERO_SELF_SIGNED_CERT`, `SELF_SIGNED_CERT_IN_CHAIN` or `CERT_HAS_EXPIRED` mean the service's certificate isn't trusted. If you trust it, set `statusCheckAllowInsecure: true` on that item.
 
-```text
-header {
-  X-Frame-Options SAMEORIGIN
-}
-```
+### `ECONNREFUSED`, `ENOTFOUND` or `ECONNABORTED`
 
-### Apache
+Dashy can't reach the service. `ECONNABORTED` means it gave up after 10 seconds.
 
-In Apache, you can use the [`mod_headers`](https://httpd.apache.org/docs/current/mod/mod_headers.html) module to set the `X-Frame-Options` in your config file. This file is usually located somewhere like `/etc/apache2/httpd.conf
+Checks run from Dashy's server, not your browser, so the URL has to work from there. In Docker, `localhost` is the Dashy container itself. Use the host's IP instead, or the container name if both are on the same Docker network. Running Dashy with `network_mode: host` also works, see [#445](https://github.com/Lissy93/dashy/discussions/445). Also check your firewall isn't blocking Dashy.
 
-```text
-Header set X-Frame-Options: "ALLOW-FROM http://[dashy-location]/"
-```
+### Every item shows `Failed to make request` or `Request timed out`
 
-### LightHttpd
+Status checks run on Dashy's Node server, so they don't work when the built app is served from a static host or CDN. Run Dashy with Docker or `node server.js` instead. Netlify is the exception, but its function can only reach public URLs.
 
-```text
-Content-Security-Policy: frame-ancestors 'self' https://[dashy-location]/
-```
+They're also turned off if `DISABLE_PROXY_ENDPOINTS=true` is set.
+
+### Service doesn't use HTTP
+
+Status checks make an HTTP request and only look at the status code. For things like databases, SSH or game servers, use a ping check instead by setting `pingCheckEnabled: true`. It pings the host from the item's `url`, or set `pingCheckHost` to ping something else.
+
+### Still not sure why it's failing
+
+Open your browser's dev tools, go to the Network tab and filter by `status-check`. Each request shows the URL Dashy checked and the full result. You can also open the endpoint yourself, e.g. `https://your-dashy/status-check/?url=https%3A%2F%2Fexample.com`. Encode the target URL first, with `encodeURIComponent()` or [urlencoder.io](https://www.urlencoder.io/).
 
 ---
 
@@ -362,6 +367,55 @@ If the homepage works but sub-page links 404, or assets fail to load, it's almos
 Rebuild with `BASE_URL` set to the sub-path - leading slash, no trailing slash:
 
 Vue Router uses this to prefix every route. Without it, links resolve to `/home/...` instead of `/dashy/home/...` and skip your reverse proxy altogether. More detail in [web-server configuration](/docs/management.md#web-server-configuration).
+
+### Invalid Host Header while running through ngrok
+
+Just add the [-host-header](https://ngrok.com/docs#http-host-header) flag, e.g. `ngrok http 8080 -host-header="localhost:8080"`
+
+### `Refused to Connect` in Modal or Workspace View
+
+This is not an issue with Dashy, but instead caused by the target app preventing direct access through embedded elements.
+
+As defined in [RFC-7034](https://datatracker.ietf.org/doc/html/rfc7034), for any web content to be accessed through an embedded element, it must have the [`X-Frame-Options`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) HTTP header set to `ALLOW`. If you are getting a `Refused to Connect` error then this header is set to `DENY` (or `SAMEORIGIN` and it's on a different host). Thankfully, for self-hosted services, it is easy to set these headers.
+
+These settings are usually set in the config file for the web server that's hosting the target application, here are some examples of how to enable cross-origin access with common web servers:
+
+#### NGINX
+
+In NGINX, you can use the [`add_header`](https://nginx.org/en/docs/http/ngx_http_headers_module.html) module within the app block.
+
+```text
+server {
+  ...
+  add_header X-Frame-Options SAMEORIGIN always;
+}
+```
+
+Then reload with `service nginx reload`
+
+#### Caddy
+
+In Caddy, you can use the [`header`](https://caddyserver.com/docs/caddyfile/directives/header) directive.
+
+```text
+header {
+  X-Frame-Options SAMEORIGIN
+}
+```
+
+#### Apache
+
+In Apache, you can use the [`mod_headers`](https://httpd.apache.org/docs/current/mod/mod_headers.html) module to set the `X-Frame-Options` in your config file. This file is usually located somewhere like `/etc/apache2/httpd.conf
+
+```text
+Header set X-Frame-Options: "ALLOW-FROM http://[dashy-location]/"
+```
+
+#### LightHttpd
+
+```text
+Content-Security-Policy: frame-ancestors 'self' https://[dashy-location]/
+```
 
 ---
 
@@ -779,64 +833,70 @@ Run `sudo apt install gnupg2 pass && gpg2 -k`
 
 ---
 
-## Styles and Assets not Updating
+## Styles, icons and assets
+
+### Styles and Assets not Updating
 
 If you find that your styles and other visual assets work when visiting `ip:port` by not `dashy.domain.com`, then this is usually caused by caching. In your browser, do a hard-refresh (<kbd>Ctrl</kbd> + <kbd>F5</kbd>). If you use Cloudflare, then you can clear the cache through the management console, or set the cache level to Bypass for certain files, under the Rules tab.
 
----
+### Custom PWA Icon or Name not Showing
 
-## Config Validation Errors
+To install Dashy as an app with your own name and icon, add a manifest to your `user-data` folder. This is what Firefox's "Add tab to taskbar" and Chrome or Edge's Install button read. `pageInfo.title` and `pageInfo.favicon` only change the browser tab.
 
-The configuration file is validated against [Dashy's Schema](https://github.com/Lissy93/dashy/blob/master/src/utils/config/ConfigSchema.json) using AJV.
+1. If you're using Docker, mount the whole `user-data` folder, not just `conf.yml`
+2. Put a 192x192 and a 512x512 PNG of your icon in user-data, e.g. `icon-192.png` and `icon-512.png`
+3. Create `user-data/manifest.webmanifest`. Dashy v4 doesn't use `manifest.json`
+4. Check that `https://your-dashy/manifest.webmanifest` shows your JSON, not Dashy's default
 
-First, check that your syntax is valid, using [YAML Validator](https://codebeautify.org/yaml-validator/) or [JSON Validator](https://codebeautify.org/jsonvalidator). If the issue persists, then take a look at the [schema](https://github.com/Lissy93/dashy/blob/master/src/utils/config/ConfigSchema.json), and verify that the field you are trying to add/ modify matches the required format. You can also use [this tool](https://www.jsonschemavalidator.net/s/JFUj7X9J) to validate your JSON config against the schema, or run `yarn validate-config`.
+Example user-data/manifest.webmanifest
 
-If you're trying to use a recently released feature, and are getting a warning, this is likely because you've not yet updated the the current latest version of Dashy.
+   ```json
+   {
+     "name": "My Dashboard",
+     "short_name": "Dashboard",
+     "start_url": "/",
+     "scope": "/",
+     "display": "standalone",
+     "icons": [
+       { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
+       { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
+     ]
+   }
+   ```
 
-If the issue still persists, you should raise an issue.
+If the installed app still has Dashy's name or icon, it's usually one of these:
 
----
+- **Browser cache.** Your browser saves the app's details the first time you install it, so remove the app and add it again. In Firefox, open the app and click "Remove tab from taskbar" in the address bar. Unpinning it from the Windows taskbar isn't enough. Still stuck? Try a fresh browser profile.
+- **Service worker.** With `appConfig.enableServiceWorker: true`, the service worker can keep serving the old manifest. Set it to `false`, or clear the site's data in your browser.
+- **SVG icons.** Browser support for SVG manifest icons varies, so include the PNGs.
+- **Content-Security-Policy.** If you set a CSP header, it needs `manifest-src 'self'` or the browser will block the manifest.
+- **Auth proxy.** If the manifest URL shows a login page, your proxy is blocking it. Let the manifest and icons through without auth (see below)
 
-## Invalid Host Header while running through ngrok
+Example of skipping auth in nginx for manifest and icons:
+  ```nginx
+  location ~ ^/(manifest\.webmanifest|icon-.*\.png)$ {
+      auth_request off;
+      proxy_pass http://dashy:8080;
+  }
+  ```
 
-Just add the [-host-header](https://ngrok.com/docs#http-host-header) flag, e.g. `ngrok http 8080 -host-header="localhost:8080"`
+See also: [#2391](https://github.com/Lissy93/dashy/issues/2391)
 
----
+### Font Awesome Icons not Displaying
 
-## Warnings in the Console during deploy
+Usually, Font Awesome will be automatically enabled if one or more of your icons are using Font-Awesome. If this is not happening, then you can always manually enable (or disable) Font Awesome by setting: [`appConfig`](/docs/configuring.md#appconfig-optional).`enableFontAwesome` to `true`.
 
-Please acknowledge the difference between errors and warnings before raising an issue about messages in the console. It's not unusual to see warnings about a new version of a certain package being available, an asset bundle bing oversized or a service worker not yet having a cache. These shouldn't have any impact on the running application, so please don't raise issues about these unless it directly relates to a bug or issue you're experiencing. Errors on the other hand should not appear in the console, and they are worth looking into further.
+If you are trying to use a premium icon, then you must have a [Pro License](https://fontawesome.com/plans). You'll then need to specify your Pro plan API key under `appConfig.fontAwesomeKey`. You can find this key, by logging into your FA account, navigate to Account → [Kits](https://fontawesome.com/kits) → New Kit → Copy Kit Code. The code is a 10-digit alpha-numeric code, and is also visible within the new kit's URL, for example: `81e48ce079`.
 
----
+<p align="center"><img src="https://i.ibb.co/hZ0D9vs/where-do-i-find-my-font-awesome-key.png" width="600" /></p>
 
-## Status Checks Failing
+Be sure that you're specifying the icon category and name correctly. You're icon should look be `[category] fa-[icon-name]`. The following categories are supported: `far` _(regular)_, `fas` _(solid)_, `fal`_(light)_, `fad` _(duo-tone)_ and `fab`_(brands)_. With the exception of brands, you'll usually want all your icons to be in from same category, so they look uniform.
 
-If you're using status checks, and despite a given service being online, the check is displaying an error, there are a couple of things you can look at:
+Ensure the icon you are trying to use, is available within [FontAwesome Version 5](https://fontawesome.com/v5/search) (we've not yet upgraded to V6, as it works a little differently).
 
-If your service requires requests to include any authorization in the headers, then use the  `statusCheckHeaders` property, as described in the [docs](/docs/status-indicators.md#setting-custom-headers).
+Examples: `fab fa-raspberry-pi`, `fas fa-database`, `fas fa-server`, `fas fa-ethernet`
 
-If you are still having issues, it may be because your target application is blocking requests from Dashy's IP. This is a [CORS error](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS), and can be fixed by setting the headers on your target app, to include:
-
-```text
-Access-Control-Allow-Origin: https://location-of-dashy/
-Vary: Origin
-```
-
-If the URL you are checking has an unsigned certificate, or is not using HTTPS, then you may need to disable the rejection of insecure requests. This can be done by setting `statusCheckAllowInsecure` to true for a given item.
-
-If your service is online, but responds with a status code that is not in the 2xx range, then you can use `statusCheckAcceptCodes` to set an accepted status code.
-
-If you get an error, like `Service Unavailable: Server resulted in Invalid URL`, even when it's definitely online, this is most likely caused by missing the protocol. Don't forget to include `https://` (or whatever protocol) before the URL, and ensure that if needed, you've specified the port.
-
-Running Dashy in HOST network mode, instead of BRIDGE will allow status check access to other services in HOST mode. For more info, see [#445](https://github.com/Lissy93/dashy/discussions/445).
-
-If you have firewall rules configured, then ensure that they don't prevent Dashy from making requests to the other services you are trying to access.
-
-Currently, the status check needs a page to be rendered, so if this URL in your browser does not return anything, then status checks will not work. This may be modified in the future, but in the meantime, a fix would be to make your own status service, which just checks if your app responds with whatever code you'd like, and then return a 200 plus renders an arbitrary message. Then just point `statusCheckUrl` to your custom page.
-
-For further troubleshooting, use an application like [Postman](https://postman.com) to diagnose the issue. Set the parameter to `GET`, and then make a call to: `https://[url-of-dashy]/status-check/?&url=[service-url]`. Where the service URL must have first been encoded (e.g. with `encodeURIComponent()` or [urlencoder.io](https://www.urlencoder.io/))
-
-If you're serving Dashy though a CDN, instead of using the Node server or Docker image, then the Node endpoint that makes requests will not be available to you, and all requests will fail. A workaround for this may be implemented in the future, but in the meantime, your only option is to use the Docker or Node deployment method.
+Finally, check the [browser console](#how-to-open-browser-console) for any error messages, and raise a ticket if the issue persists.
 
 ---
 
@@ -966,25 +1026,23 @@ If you've set `options.provider` to either `ipinfo` and `ipquery` and the reques
 
 ---
 
-## Font Awesome Icons not Displaying
+## Errors and warnings
 
-Usually, Font Awesome will be automatically enabled if one or more of your icons are using Font-Awesome. If this is not happening, then you can always manually enable (or disable) Font Awesome by setting: [`appConfig`](/docs/configuring.md#appconfig-optional).`enableFontAwesome` to `true`.
+### Config Validation Errors
 
-If you are trying to use a premium icon, then you must have a [Pro License](https://fontawesome.com/plans). You'll then need to specify your Pro plan API key under `appConfig.fontAwesomeKey`. You can find this key, by logging into your FA account, navigate to Account → [Kits](https://fontawesome.com/kits) → New Kit → Copy Kit Code. The code is a 10-digit alpha-numeric code, and is also visible within the new kit's URL, for example: `81e48ce079`.
+The configuration file is validated against [Dashy's Schema](https://github.com/Lissy93/dashy/blob/master/src/utils/config/ConfigSchema.json) using AJV.
 
-<p align="center"><img src="https://i.ibb.co/hZ0D9vs/where-do-i-find-my-font-awesome-key.png" width="600" /></p>
+First, check that your syntax is valid, using [YAML Validator](https://codebeautify.org/yaml-validator/) or [JSON Validator](https://codebeautify.org/jsonvalidator). If the issue persists, then take a look at the [schema](https://github.com/Lissy93/dashy/blob/master/src/utils/config/ConfigSchema.json), and verify that the field you are trying to add/ modify matches the required format. You can also use [this tool](https://www.jsonschemavalidator.net/s/JFUj7X9J) to validate your JSON config against the schema, or run `yarn validate-config`.
 
-Be sure that you're specifying the icon category and name correctly. You're icon should look be `[category] fa-[icon-name]`. The following categories are supported: `far` _(regular)_, `fas` _(solid)_, `fal`_(light)_, `fad` _(duo-tone)_ and `fab`_(brands)_. With the exception of brands, you'll usually want all your icons to be in from same category, so they look uniform.
+If you're trying to use a recently released feature, and are getting a warning, this is likely because you've not yet updated the the current latest version of Dashy.
 
-Ensure the icon you are trying to use, is available within [FontAwesome Version 5](https://fontawesome.com/v5/search) (we've not yet upgraded to V6, as it works a little differently).
+If the issue still persists, you should raise an issue.
 
-Examples: `fab fa-raspberry-pi`, `fas fa-database`, `fas fa-server`, `fas fa-ethernet`
+### Warnings in the Console during deploy
 
-Finally, check the [browser console](#how-to-open-browser-console) for any error messages, and raise a ticket if the issue persists.
+Please acknowledge the difference between errors and warnings before raising an issue about messages in the console. It's not unusual to see warnings about a new version of a certain package being available, an asset bundle bing oversized or a service worker not yet having a cache. These shouldn't have any impact on the running application, so please don't raise issues about these unless it directly relates to a bug or issue you're experiencing. Errors on the other hand should not appear in the console, and they are worth looking into further.
 
----
-
-## Copy to Clipboard not Working
+### Copy to Clipboard not Working
 
 If the copy to clipboard feature (either under Config --> Export, or Item --> Copy URL) isn't functioning as expected, first check the browser console. If you see `TypeError: Cannot read properties of undefined (reading 'writeText')` then this feature is not supported by your browser.
 The most common reason for this, is if you not running the app over HTTPS. Copying to the clipboard requires the app to be running in a secure origin / aka have valid HTTPS cert. You can read more about this [here](https://stackoverflow.com/a/71876238/979052).
@@ -993,51 +1051,6 @@ As a workaround, you could either:
 
 - Highlight the text and copy / <kbd>Ctrl</kbd> + <kbd>C</kbd>
 - Or setup SSL - [here's a guide](https://github.com/Lissy93/dashy/blob/master/docs/management.md#ssl-certificates) on doing so
-
----
-
-## Custom PWA Icon or Name not Showing
-
-To install Dashy as an app with your own name and icon, add a manifest to your `user-data` folder. This is what Firefox's "Add tab to taskbar" and Chrome or Edge's Install button read. `pageInfo.title` and `pageInfo.favicon` only change the browser tab.
-
-1. If you're using Docker, mount the whole `user-data` folder, not just `conf.yml`
-2. Put a 192x192 and a 512x512 PNG of your icon in user-data, e.g. `icon-192.png` and `icon-512.png`
-3. Create `user-data/manifest.webmanifest`. Dashy v4 doesn't use `manifest.json`
-4. Check that `https://your-dashy/manifest.webmanifest` shows your JSON, not Dashy's default
-
-Example user-data/manifest.webmanifest
-
-   ```json
-   {
-     "name": "My Dashboard",
-     "short_name": "Dashboard",
-     "start_url": "/",
-     "scope": "/",
-     "display": "standalone",
-     "icons": [
-       { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" },
-       { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }
-     ]
-   }
-   ```
-
-If the installed app still has Dashy's name or icon, it's usually one of these:
-
-- **Browser cache.** Your browser saves the app's details the first time you install it, so remove the app and add it again. In Firefox, open the app and click "Remove tab from taskbar" in the address bar. Unpinning it from the Windows taskbar isn't enough. Still stuck? Try a fresh browser profile.
-- **Service worker.** With `appConfig.enableServiceWorker: true`, the service worker can keep serving the old manifest. Set it to `false`, or clear the site's data in your browser.
-- **SVG icons.** Browser support for SVG manifest icons varies, so include the PNGs.
-- **Content-Security-Policy.** If you set a CSP header, it needs `manifest-src 'self'` or the browser will block the manifest.
-- **Auth proxy.** If the manifest URL shows a login page, your proxy is blocking it. Let the manifest and icons through without auth (see below)
-
-Example of skipping auth in nginx for manifest and icons:
-  ```nginx
-  location ~ ^/(manifest\.webmanifest|icon-.*\.png)$ {
-      auth_request off;
-      proxy_pass http://dashy:8080;
-  }
-  ```
-
-See also: [#2391](https://github.com/Lissy93/dashy/issues/2391)
 
 ---
 
