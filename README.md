@@ -426,7 +426,7 @@ Dashy supports multiple languages and locales. When available, your language sho
 #### Supported Languages
 - 🇬🇧 **English**: `en` - _Default_
 - 🇬🇧 **English (British)**: `en-GB`
-- 🇦🇪 **Arabic**: `ar` - Contributed by **[@kayedspace](https://github.com/kayedspace)**
+- 🇦🇪 **Arabic**: `ar` - Contributed by **[@kayedspace](https://github.com/kayedspace)** and **[@Mohamed-Almarag](https://github.com/Mohamed-Almarag)**
 - 🇦🇿 **Azerbaijani**: `az` - Contributed by **[@jamalkamaladdin](https://github.com/jamalkamaladdin)**
 - 🇧🇩 **Bengali**: `bn` - Contributed by **[@soaibsafi](https://github.com/soaibsafi)**
 - 🇧🇬 **Bulgarian**: `bg` - Contributed by **[@asenov](https://github.com/asenov)**
@@ -441,7 +441,7 @@ Dashy supports multiple languages and locales. When available, your language sho
 - 🇭🇺 **Hungarian**: `hu` - Contributed by **[@apgyorfi](https://github.com/apgyorfi)**
 - 🇮🇩 **Indonesian**: `id` - Contributed by **[@Yoruxyv](https://github.com/Yoruxyv)**
 - 🇮🇹 **Italian**: `it` - Contributed by **[@alexdelprete](https://github.com/alexdelprete)**
-- 🇯🇵 **Japanese**: `ja` - _Auto-generated_ (needs human review!)
+- 🇯🇵 **Japanese**: `ja` - Contributed by **[@oka4shi](https://github.com/oka4shi)**
 - 🇰🇷 **Korean**: `ko` - Contributed by **[@boggy-cs](https://github.com/boggy-cs)**
 - 🇰🇬 **Kyrgyz**: `ky` - Contributed by **[@noblepower1337](https://github.com/noblepower1337)**
 - 🇳🇴 **Norwegian Bokmål**: `nb` - Contributed by **[@rubjo](https://github.com/rubjo)**
