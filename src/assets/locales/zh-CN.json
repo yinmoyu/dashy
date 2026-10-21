@@ -26,6 +26,8 @@
   "login": {
     "title": "Dashy",
     "guest-label": "访客访问",
+    "oidc-label": "单点登录",
+    "oidc-login-button": "使用 SSO 登录",
     "username-label": "用户名",
     "password-label": "密码",
     "login-button": "登录",
@@ -363,13 +365,18 @@
       "save-locally-warning": "配置将保存到你当前的浏览器上。你也可以导出配置到其他设备上使用。是否继续？"
     },
     "edit-item": {
-      "missing-title-err": "标题是必需的"
+      "missing-title-err": "标题是必需的",
+      "add-item-title": "添加新项目",
+      "add-item-description": "点击添加新项目"
     },
     "edit-section": {
       "edit-section-title": "编辑 Section",
       "add-section-title": "添加新的 Section",
       "edit-tooltip": "单击以修改，或右键点击以获取更多选项",
-      "remove-confirm": "确定要删除此部分吗？ 此操作可以稍后撤消。"
+      "edit-tooltip-basic": "单击以修改",
+      "remove-confirm": "确定要删除此部分吗？ 此操作可以稍后撤消。",
+      "missing-name-err": "Section 名称是必需的",
+      "duplicate-name-err": "名为“{name}”的 Section 已存在"
     },
     "edit-widget": {
       "edit-widget-title": "编辑小组件",
@@ -380,6 +387,7 @@
       "update-interval-label": "更新间隔（秒）",
       "timeout-label": "超时（毫秒）",
       "use-proxy-label": "使用代理",
+      "allow-insecure-label": "允许无效证书",
       "ignore-errors-label": "忽略错误",
       "options-heading": "小组件选项",
       "add-option-btn": "添加选项",
@@ -440,6 +448,24 @@
       "show-less": "显示更少信息",
       "open-link": "继续阅读"
     },
+    "apod": {
+      "watch-video": "观看视频"
+    },
+    "calendar": {
+      "all-day": "全天",
+      "no-events": "暂无日程",
+      "today": "今天",
+      "tomorrow": "明天",
+      "untitled": "未命名日程"
+    },
+    "github-profile": {
+      "repos": "仓库",
+      "followers": "关注者",
+      "following": "正在关注",
+      "stars": "星标",
+      "forks": "复刻",
+      "issues": "议题"
+    },
     "pi-hole": {
       "status-heading": "状态"
     },
@@ -460,7 +486,12 @@
       "disk-file-system": "文件系统",
       "disk-io-read": "读取",
       "disk-io-write": "写入",
-      "system-load-desc": "队列中等待的进程数 及所有内核的平均值"
+      "system-load-desc": "队列中等待的进程数 及所有内核的平均值",
+      "gpu-usage": "使用率",
+      "gpu-memory": "显存",
+      "gpu-temperature": "温度",
+      "gpu-fan-speed": "风扇",
+      "gpu-none": "未检测到 GPU"
     },
     "system-info": {
       "uptime": "运行时间"
