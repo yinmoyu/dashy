@@ -4,9 +4,12 @@ import {
 import { shallowMount } from '@vue/test-utils';
 import SideBarItem from '@/components/Workspace/SideBarItem.vue';
 
-function mountItem(props = {}) {
+vi.mock('@/utils/request', () => ({ default: { get: vi.fn() } }));
+vi.mock('@/router', () => ({ default: { push: vi.fn() } }));
+
+function mountItem(item, props = {}) {
   return shallowMount(SideBarItem, {
-    props,
+    props: { item, ...props },
     global: {
       directives: {
         tooltip: {},
@@ -32,58 +35,45 @@ describe('SideBarItem', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders icon when icon prop is provided', () => {
-    const wrapper = mountItem({ icon: 'fas fa-server', title: 'Server' });
-    expect(wrapper.classes()).toContain('w-icon');
+  it('renders a link with icon and title when item has a url', () => {
+    const wrapper = mountItem({ icon: 'fas fa-server', title: 'Server', url: 'https://example.com' });
+    expect(wrapper.element.tagName).toBe('A');
+    expect(wrapper.attributes('href')).toBe('https://example.com');
     expect(wrapper.findComponent({ name: 'Icon' }).exists()).toBe(true);
-    expect(wrapper.find('p.small-title').exists()).toBe(false);
+    expect(wrapper.find('.title').text()).toBe('Server');
   });
 
-  it('renders title as small-title when icon is empty', () => {
+  it('renders a button with initials when there is no url or icon', () => {
     const wrapper = mountItem({ title: 'No Icon App' });
-    expect(wrapper.classes()).toContain('text-only');
-    expect(wrapper.find('p.small-title').exists()).toBe(true);
-    expect(wrapper.find('p.small-title').text()).toBe('No Icon App');
+    expect(wrapper.element.tagName).toBe('BUTTON');
+    expect(wrapper.find('.initials').text()).toBe('NI');
   });
 
-  it('emits launch-app on normal click', async () => {
+  it('emits launch-app on normal click, without navigating', () => {
     const wrapper = mountItem({ title: 'App', url: 'https://example.com', target: 'workspace' });
-    await wrapper.trigger('click');
-    expect(wrapper.emitted('launch-app')).toBeTruthy();
-    expect(wrapper.emitted('launch-app')[0]).toEqual([{ url: 'https://example.com', target: 'workspace' }]);
+    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+    wrapper.element.dispatchEvent(event);
+    expect(event.defaultPrevented).toBe(true);
+    expect(wrapper.emitted('launch-app')).toEqual([['https://example.com']]);
     expect(openSpy).not.toHaveBeenCalled();
   });
 
-  it('launches the workspace app when the icon is clicked', async () => {
-    const wrapper = mountItem({ icon: 'fas fa-server', title: 'App', url: 'https://example.com', target: 'workspace' });
-    await wrapper.findComponent({ name: 'Icon' }).trigger('click');
-    expect(wrapper.emitted('launch-app')).toEqual([[{ url: 'https://example.com', target: 'workspace' }]]);
-    expect(openSpy).not.toHaveBeenCalled();
-  });
-
-  it('launches the workspace app when the title is clicked', async () => {
-    const wrapper = mountItem({ title: 'App', url: 'https://example.com', target: 'workspace' });
-    await wrapper.find('.small-title').trigger('click');
-    expect(wrapper.emitted('launch-app')).toEqual([[{ url: 'https://example.com', target: 'workspace' }]]);
-    expect(openSpy).not.toHaveBeenCalled();
-  });
-
-  it('opens in new tab when clicked with ctrlKey or metaKey', async () => {
-    const wrapper = mountItem({ title: 'App', url: 'https://example.com', target: 'workspace' });
+  it('leaves ctrl/meta clicks to the browser', async () => {
+    const wrapper = mountItem({ title: 'App', url: 'https://example.com' });
     await wrapper.trigger('click', { ctrlKey: true });
-    expect(openSpy).toHaveBeenCalledWith('https://example.com', '_blank', 'noopener,noreferrer');
-    expect(wrapper.emitted('launch-app')).toBeFalsy();
-
-    openSpy.mockClear();
-
     await wrapper.trigger('click', { metaKey: true });
-    expect(openSpy).toHaveBeenCalledWith('https://example.com', '_blank', 'noopener,noreferrer');
     expect(wrapper.emitted('launch-app')).toBeFalsy();
   });
 
-  it('opens in new tab when middle clicked (auxclick button 1)', async () => {
-    const wrapper = mountItem({ title: 'App', url: 'https://example.com', target: 'workspace' });
-    await wrapper.trigger('auxclick', { button: 1 });
-    expect(openSpy).toHaveBeenCalledWith('https://example.com', '_blank', 'noopener,noreferrer');
+  it('opens newtab targets outside the workspace', async () => {
+    const wrapper = mountItem({ title: 'App', url: 'https://example.com', target: 'newtab' });
+    await wrapper.trigger('click');
+    expect(openSpy).toHaveBeenCalledWith('https://example.com', '_blank');
+    expect(wrapper.emitted('launch-app')).toBeFalsy();
+  });
+
+  it('marks the active item', () => {
+    const wrapper = mountItem({ title: 'App', url: 'https://example.com' }, { active: true });
+    expect(wrapper.classes()).toContain('active');
   });
 });
